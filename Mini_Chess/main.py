@@ -38,10 +38,11 @@ def loadImages():
     return IMAGES
 
 
-def drawGameState(WINDOW, GAME_STATE):
+def drawGameState(WINDOW, GAME_STATE, VALID_POS):
     images = loadImages()
     drawBoard(WINDOW)
     drawPieces(WINDOW, GAME_STATE.board, images)
+    mark_valid_pos(WINDOW, VALID_POS)
 
 
 def drawBoard(WINDOW):
@@ -75,10 +76,120 @@ def drawPieces(WINDOW, Board, IMAGES):
                     row*SQ_SIZE, col*SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 
+def get_valid_moves(piece, position, BOARD):
+    x, y = position
+    valid_moves = []
+    print(BOARD[y])
+
+    if piece == 'b_R' or piece == 'w_R':
+        print("inside")
+        # Rook can move horizontally or vertically
+        # Check horizontally to the right
+        for i in range(x + 1, DIMENSION_X):
+            if BOARD[y][i] == '--':
+                valid_moves.append((i, y))
+            else:
+                break
+        # Check horizontally to the left
+        for i in range(x - 1, -1, -1):
+            if BOARD[y][i] == '--':
+                valid_moves.append((i, y))
+            else:
+                break
+        # Check vertically downward
+        for i in range(y + 1, DIMENSION_Y):
+            if BOARD[i][x] == '--':
+                valid_moves.append((x, i))
+            else:
+                break
+        # Check vertically upward
+        for i in range(y - 1, -1, -1):
+            if BOARD[i][x] == '--':
+                valid_moves.append((x, i))
+            else:
+                break
+
+    elif piece == 'b_B' or piece == 'w_B':
+        # Bishop can move diagonally
+        # Check diagonally to the bottom-right
+        for i, j in zip(range(x + 1, DIMENSION_X), range(y + 1, DIMENSION_Y)):
+            if BOARD[j][i] == '--':
+                valid_moves.append((i, j))
+            else:
+                break
+        # Check diagonally to the bottom-left
+        for i, j in zip(range(x - 1, -1, -1), range(y + 1, DIMENSION_Y)):
+            if BOARD[j][i] == '--':
+                valid_moves.append((i, j))
+            else:
+                break
+        # Check diagonally to the top-right
+        for i, j in zip(range(x + 1, DIMENSION_X), range(y - 1, -1, -1)):
+            if BOARD[j][i] == '--':
+                valid_moves.append((i, j))
+            else:
+                break
+        # Check diagonally to the top-left
+        for i, j in zip(range(x - 1, -1, -1), range(y - 1, -1, -1)):
+            if BOARD[j][i] == '--':
+                valid_moves.append((i, j))
+            else:
+                break
+
+    elif piece == 'b_Kn' or piece == 'w_Kn':
+        # Knight's L-shaped movement
+        knight_moves = [(2, 1), (2, -1), (-2, 1), (-2, -1),
+                        (1, 2), (1, -2), (-1, 2), (-1, -2)]
+
+        for dx, dy in knight_moves:
+            new_x = x + dx
+            new_y = y + dy
+
+            if 0 <= new_x < DIMENSION_X and 0 <= new_y < DIMENSION_Y and BOARD[new_y][new_x] == '--':
+                valid_moves.append((new_x, new_y))
+
+    elif piece == 'b_P':
+        # Black pawn moves downward
+        if y + 1 < DIMENSION_Y and BOARD[y + 1][x] == '--':
+            valid_moves.append((x, y + 1))
+            if y == 1 and BOARD[y + 2][x] == '--':
+                valid_moves.append((x, y + 2))
+
+        # Capturing diagonally
+        if y + 1 < DIMENSION_Y and x - 1 >= 0 and BOARD[y + 1][x - 1] != '--':
+            valid_moves.append((x - 1, y + 1))
+        if y + 1 < DIMENSION_Y and x + 1 < DIMENSION_X and BOARD[y + 1][x + 1] != '--':
+            valid_moves.append((x + 1, y + 1))
+
+    elif piece == 'w_P':
+        # White pawn moves upward
+        if y - 1 >= 0 and BOARD[y - 1][x] == '--':
+            valid_moves.append((x, y - 1))
+            if y == 4 and BOARD[y - 2][x] == '--':
+                valid_moves.append((x, y - 2))
+
+        # Capturing diagonally
+        if y - 1 >= 0 and x - 1 >= 0 and BOARD[y - 1][x - 1] != '--':
+            valid_moves.append((x - 1, y - 1))
+        if y - 1 >= 0 and x + 1 < DIMENSION_X and BOARD[y - 1][x + 1] != '--':
+            valid_moves.append((x + 1, y - 1))
+
+    return valid_moves
+
+
+def mark_valid_pos(WINDOW, VALID_POS):
+
+    for position in VALID_POS:
+        valid_rect = pygame.Rect(
+            position[0] * SQ_SIZE, position[1] * SQ_SIZE, SQ_SIZE, SQ_SIZE)
+        pygame.draw.rect(WINDOW, pygame.Color('green'), valid_rect, 3)
+
+
 def main():
 
     # initialize pygame
     pygame.init()
+    valid_positions = []
 
     # Set Display
     WINDOW = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -92,12 +203,10 @@ def main():
     # The main game loop
     running = True
     while running:
+
         # render game elements
         WINDOW.fill(BACKGROUND)
         clock.tick(FPS)
-
-        ### PROCESS ###
-        drawGameState(WINDOW, GAME_STATE)
 
         # Draw red border if a piece is selected
         if SELECTED_PIECE is not None:
@@ -115,7 +224,20 @@ def main():
                 x_coord = event.pos[0] // SQ_SIZE
                 y_coord = event.pos[1] // SQ_SIZE
 
+                # mark selected piece
                 SELECTED_PIECE = (x_coord, y_coord)
+
+                # check valid move
+                piece_id = GAME_STATE.board[y_coord][x_coord]
+                if piece_id != '--':
+                    valid_moves = get_valid_moves(
+                        piece_id, (x_coord, y_coord), GAME_STATE.board)
+                    valid_positions = valid_moves
+
+          ### PROCESS ###
+
+        # Set Game State
+        drawGameState(WINDOW, GAME_STATE, valid_positions)
 
         # Update the window state
         pygame.display.update()
