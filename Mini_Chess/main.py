@@ -50,8 +50,8 @@ def drawBoard(WINDOW):
     mouse_x, mouse_y = pygame.mouse.get_pos()
 
     # ADD SHAPES
-    for row in range(0, 6):
-        for col in range(0, 5):
+    for row in range(0, DIMENSION_Y):
+        for col in range(0, DIMENSION_X):
             rectangle = pygame.Rect(
                 col * SQ_SIZE, row * SQ_SIZE, SQ_SIZE, SQ_SIZE)
 
@@ -70,7 +70,6 @@ def drawPieces(WINDOW, Board, IMAGES):
     for row in range(DIMENSION_X):
         for col in range(DIMENSION_Y):
             piece = Board[col][row]
-            print("R: ", row, "Col: ", col, "Board: ", piece)
             if piece != '--':
                 WINDOW.blit(IMAGES[piece], pygame.Rect(
                     row*SQ_SIZE, col*SQ_SIZE, SQ_SIZE, SQ_SIZE))
@@ -88,18 +87,11 @@ def main():
 
     # Set GameState
     GAME_STATE = engine.GameState()
-
-    running = True
+    SELECTED_PIECE = None
 
     # The main game loop
+    running = True
     while running:
-
-        # code to close the window
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                pygame.quit()
-                sys.exit()
-
         # render game elements
         WINDOW.fill(BACKGROUND)
         clock.tick(FPS)
@@ -107,7 +99,25 @@ def main():
         ### PROCESS ###
         drawGameState(WINDOW, GAME_STATE)
 
-        # this is must to update the window state
+        # Draw red border if a piece is selected
+        if SELECTED_PIECE is not None:
+            SELECTED_RECT = pygame.Rect(
+                SELECTED_PIECE[0] * SQ_SIZE, SELECTED_PIECE[1] * SQ_SIZE, SQ_SIZE, SQ_SIZE)
+            pygame.draw.rect(WINDOW, pygame.Color('red'), SELECTED_RECT, 3)
+
+        # Event handling
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
+
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                x_coord = event.pos[0] // SQ_SIZE
+                y_coord = event.pos[1] // SQ_SIZE
+
+                SELECTED_PIECE = (x_coord, y_coord)
+
+        # Update the window state
         pygame.display.update()
 
 
