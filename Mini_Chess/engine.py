@@ -10,6 +10,3 @@ class GameState():
             ['w_P', 'w_P', 'w_P', 'w_P', 'w_P'],
             ['w_R', 'w_Kn', 'w_B', 'w_Q', 'w_K'],
         ]
-
-        self.whiteToMove = True
-        self.movelog = []

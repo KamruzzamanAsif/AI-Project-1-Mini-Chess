@@ -5,24 +5,24 @@ from pygame.locals import *
 
 import engine
 
+########################## HEADERS ##########################
+
 # Game Setup
 WINDOW_WIDTH = 300
 WINDOW_HEIGHT = 360
 SQ_SIZE = 60
-DIMENSION_X = 6
-DIMENSION_Y = 5
+DIMENSION_X = 5
+DIMENSION_Y = 6
 FPS = 60
 
 # BG color
 BACKGROUND = (122, 255, 255)
-FULL_RED = (255, 0, 0)
-FULL_BLUE = (0, 255, 0)
-FULL_GREEN = (0, 0, 255)
-BOARD_COLOR_A = (118, 150, 86)
-BOARD_COLOR_B = (238, 238, 210)
+BOARD_COLOR_A = pygame.Color('white')
+BOARD_COLOR_B = pygame.Color('light grey')
 HOVER_COLOR = (210, 140, 80)
 
-## PROCESS FUNCTIONS ##
+
+########################## PROCESS FUNCTIONS ##########################
 
 
 def loadImages():
@@ -60,15 +60,15 @@ def drawBoard(WINDOW):
                 pygame.draw.rect(WINDOW, HOVER_COLOR, rectangle)
 
             elif (row + col) % 2 == 0:
-                pygame.draw.rect(WINDOW, pygame.Color('white'), rectangle)
+                pygame.draw.rect(WINDOW, BOARD_COLOR_A, rectangle)
             else:
-                pygame.draw.rect(WINDOW, pygame.Color('light grey'), rectangle)
+                pygame.draw.rect(WINDOW, BOARD_COLOR_B, rectangle)
 
 
 def drawPieces(WINDOW, Board, IMAGES):
 
-    for row in range(DIMENSION_Y):
-        for col in range(DIMENSION_X):
+    for row in range(DIMENSION_X):
+        for col in range(DIMENSION_Y):
             piece = Board[col][row]
             print("R: ", row, "Col: ", col, "Board: ", piece)
             if piece != '--':
@@ -78,15 +78,19 @@ def drawPieces(WINDOW, Board, IMAGES):
 
 def main():
 
+    # initialize pygame
     pygame.init()
 
-    # Set Window
+    # Set Display
     WINDOW = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     pygame.display.set_caption('Hello from Pygame')
     clock = pygame.time.Clock()
+
+    # Set GameState
     GAME_STATE = engine.GameState()
 
     running = True
+
     # The main game loop
     while running:
 
