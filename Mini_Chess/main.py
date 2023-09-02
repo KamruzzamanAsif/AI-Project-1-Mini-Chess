@@ -221,7 +221,7 @@ def main():
                 x_coord = event.pos[1] // SQ_SIZE
                 selectedSq.append((x_coord, y_coord))
 
-                # mark selected pddiece
+                # mark selected piece
                 SELECTED_PIECE = (y_coord, x_coord)
                 pieceClickCount += 1
 
