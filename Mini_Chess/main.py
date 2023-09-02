@@ -182,7 +182,7 @@ def mark_valid_pos(WINDOW, VALID_POS):
     for position in VALID_POS:
         valid_rect = pygame.Rect(
             position[0] * SQ_SIZE, position[1] * SQ_SIZE, SQ_SIZE, SQ_SIZE)
-        pygame.draw.rect(WINDOW, pygame.Color('green'), valid_rect, 3)
+        pygame.draw.rect(WINDOW, pygame.Color('red'), valid_rect, 3)
 
 
 def main():
@@ -208,12 +208,6 @@ def main():
         WINDOW.fill(BACKGROUND)
         clock.tick(FPS)
 
-        # Draw red border if a piece is selected
-        if SELECTED_PIECE is not None:
-            SELECTED_RECT = pygame.Rect(
-                SELECTED_PIECE[0] * SQ_SIZE, SELECTED_PIECE[1] * SQ_SIZE, SQ_SIZE, SQ_SIZE)
-            pygame.draw.rect(WINDOW, pygame.Color('red'), SELECTED_RECT, 3)
-
         # Event handling
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -234,10 +228,15 @@ def main():
                         piece_id, (x_coord, y_coord), GAME_STATE.board)
                     valid_positions = valid_moves
 
-          ### PROCESS ###
-
         # Set Game State
         drawGameState(WINDOW, GAME_STATE, valid_positions)
+
+        # Draw red border if a piece is selected
+        if SELECTED_PIECE is not None:
+            SELECTED_RECT = pygame.Rect(
+                SELECTED_PIECE[0] * SQ_SIZE, SELECTED_PIECE[1] * SQ_SIZE, SQ_SIZE, SQ_SIZE)
+            ans = pygame.draw.rect(
+                WINDOW, pygame.Color('blue'), SELECTED_RECT, 3)
 
         # Update the window state
         pygame.display.update()
