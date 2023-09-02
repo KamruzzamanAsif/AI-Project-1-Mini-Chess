@@ -190,6 +190,8 @@ def main():
     # initialize pygame
     pygame.init()
     valid_positions = []
+    pieceClickCount = 0
+    selectedSq = []
 
     # Set Display
     WINDOW = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -215,28 +217,38 @@ def main():
                 sys.exit()
 
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                x_coord = event.pos[0] // SQ_SIZE
-                y_coord = event.pos[1] // SQ_SIZE
+                y_coord = event.pos[0] // SQ_SIZE
+                x_coord = event.pos[1] // SQ_SIZE
+                selectedSq.append((x_coord, y_coord))
 
-                # mark selected piece
-                SELECTED_PIECE = (x_coord, y_coord)
+                # mark selected pddiece
+                SELECTED_PIECE = (y_coord, x_coord)
+                pieceClickCount += 1
 
-                # check valid move
-                piece_id = GAME_STATE.board[y_coord][x_coord]
-                if piece_id != '--':
-                    valid_moves = get_valid_moves(
-                        piece_id, (x_coord, y_coord), GAME_STATE.board)
-                    valid_positions = valid_moves
+                # # check valid move
+                # piece_id = GAME_STATE.board[x_coord][y_coord]
+                # if piece_id != '--':
+                #     valid_moves = get_valid_moves(
+                #         piece_id, (y_coord, x_coord), GAME_STATE.board)
+                #     valid_positions = valid_moves
 
         # Set Game State
         drawGameState(WINDOW, GAME_STATE, valid_positions)
 
+        if pieceClickCount == 2:
+
+            print(selectedSq[0], selectedSq[1])
+            move = engine.Move(selectedSq[0], selectedSq[1], GAME_STATE.board)
+            print(move.getChessNotation())
+            GAME_STATE.makeMove(move)
+            pieceClickCount = 0
+            selectedSq = []
+
         # Draw red border if a piece is selected
-        if SELECTED_PIECE is not None:
+        if SELECTED_PIECE is not None and pieceClickCount == 1:
             SELECTED_RECT = pygame.Rect(
                 SELECTED_PIECE[0] * SQ_SIZE, SELECTED_PIECE[1] * SQ_SIZE, SQ_SIZE, SQ_SIZE)
-            ans = pygame.draw.rect(
-                WINDOW, pygame.Color('blue'), SELECTED_RECT, 3)
+            pygame.draw.rect(WINDOW, pygame.Color('blue'), SELECTED_RECT, 3)
 
         # Update the window state
         pygame.display.update()
