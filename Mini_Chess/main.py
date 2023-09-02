@@ -232,6 +232,10 @@ def main():
                 #         piece_id, (y_coord, x_coord), GAME_STATE.board)
                 #     valid_positions = valid_moves
 
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_z: #undo when z is pressed
+                    GAME_STATE.undoMove()
+
         # Set Game State
         drawGameState(WINDOW, GAME_STATE, valid_positions)
 

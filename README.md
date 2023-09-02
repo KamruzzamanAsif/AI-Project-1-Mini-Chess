@@ -4,11 +4,11 @@ This is a simple chess game that you can play against an AI opponent. The game f
 
 ## Installation
 
-To run this game, you need to have Python 3 and the pygame package installed on your system. You can install pygame using the following command:
+To run this game, you need to have Python 3 and PIP installed on your system. You can install pygame using the following command:
 
-```
-pip install pygame
-```
+
+`pip install -r requirements.txt`
+
 
 ## Usage
 
