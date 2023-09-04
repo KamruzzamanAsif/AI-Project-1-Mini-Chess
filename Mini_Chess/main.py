@@ -202,6 +202,10 @@ def main():
     GAME_STATE = engine.GameState()
     SELECTED_PIECE = None
 
+    # Get valid moves
+    validMoves = GAME_STATE.getValidMoves()
+    moveMade = False #flag variable when a move is made
+
     # The main game loop
     running = True
     while running:
@@ -235,6 +239,14 @@ def main():
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_z: #undo when z is pressed
                     GAME_STATE.undoMove()
+                    moveMade = True
+
+
+        # update valid moves
+        if moveMade:
+            validMoves = GAME_STATE.getValidMoves()
+            moveMade = False
+
 
         # Set Game State
         drawGameState(WINDOW, GAME_STATE, valid_positions)
@@ -244,7 +256,11 @@ def main():
             print(selectedSq[0], selectedSq[1])
             move = engine.Move(selectedSq[0], selectedSq[1], GAME_STATE.board)
             print(move.getChessNotation())
-            GAME_STATE.makeMove(move)
+            
+            # if move valid then make move
+            if move in validMoves:
+                GAME_STATE.makeMove(move)
+                moveMade = True
             pieceClickCount = 0
             selectedSq = []
 
