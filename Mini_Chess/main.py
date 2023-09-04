@@ -74,14 +74,32 @@ def drawBoard(WINDOW):
             rectangle = pygame.Rect(
                 col * SQ_SIZE, row * SQ_SIZE, SQ_SIZE, SQ_SIZE)
 
+            # Calculate rank value for the current row
+            rank = 6 - row
+
+            # Calculate file value for the current column
+            file_ = chr(ord('a') + col)
+
             # Check if mouse is hovering
             if rectangle.collidepoint(mouse_x, mouse_y):
                 pygame.draw.rect(WINDOW, HOVER_COLOR, rectangle)
-
             elif (row + col) % 2 == 0:
                 pygame.draw.rect(WINDOW, BOARD_COLOR_A, rectangle)
             else:
                 pygame.draw.rect(WINDOW, BOARD_COLOR_B, rectangle)
+
+            # Render rank value in the left cells
+            if col == 0:
+                font = pygame.font.SysFont('Comic Sans', 15)
+                surface = font.render(str(rank), True, 'blue')
+                WINDOW.blit(surface, (5, row * SQ_SIZE + 5))
+
+            # Render file value in the bottom row
+            if row == DIMENSION_Y - 1:
+                font = pygame.font.SysFont('Comic Sans', 15)
+                surface = font.render(file_, True, 'blue')
+                WINDOW.blit(surface, (col * SQ_SIZE + 53,
+                            (DIMENSION_Y-1) * SQ_SIZE + 45))
 
 
 def drawPieces(WINDOW, Board, IMAGES):
@@ -223,6 +241,9 @@ def mark_valid_pos(WINDOW, VALID_POS):
         valid_rect = pygame.Rect(
             position[0] * SQ_SIZE, position[1] * SQ_SIZE, SQ_SIZE, SQ_SIZE)
         pygame.draw.rect(WINDOW, pygame.Color('red'), valid_rect, 3)
+
+
+########################## MAIN FUNCTION ##########################
 
 
 def main():
