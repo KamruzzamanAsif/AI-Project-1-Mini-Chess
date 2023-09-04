@@ -177,6 +177,7 @@ def get_valid_moves(piece, position, BOARD):
     return valid_moves
 
 
+## this should be deleted
 def mark_valid_pos(WINDOW, VALID_POS):
 
     for position in VALID_POS:
