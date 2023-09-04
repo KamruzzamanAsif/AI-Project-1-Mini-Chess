@@ -45,8 +45,8 @@ BUTTON_FONT = pygame.font.SysFont('Arial', 20, bold=True)
 def loadImages():
 
     IMAGES = {}
-    pieces = ['b_B', 'b_K', 'b_Kn', 'b_P', 'b_Q', 'b_R',
-              'w_B', 'w_K', 'w_Kn', 'w_P', 'w_Q', 'w_R']
+    pieces = ['b_B', 'b_K', 'b_N', 'b_P', 'b_Q', 'b_R',
+              'w_B', 'w_K', 'w_N', 'w_P', 'w_Q', 'w_R']
 
     for piece in pieces:
         image = pygame.image.load('images/' + piece + '.png')
@@ -112,107 +112,6 @@ def drawPieces(WINDOW, Board, IMAGES):
                     row*SQ_SIZE, col*SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 
-def get_valid_moves(piece, position, BOARD):
-    x, y = position
-    valid_moves = []
-    print(BOARD[y])
-
-    if piece == 'b_R' or piece == 'w_R':
-        print("inside")
-        # Rook can move horizontally or vertically
-        # Check horizontally to the right
-        for i in range(x + 1, DIMENSION_X):
-            if BOARD[y][i] == '--':
-                valid_moves.append((i, y))
-            else:
-                break
-        # Check horizontally to the left
-        for i in range(x - 1, -1, -1):
-            if BOARD[y][i] == '--':
-                valid_moves.append((i, y))
-            else:
-                break
-        # Check vertically downward
-        for i in range(y + 1, DIMENSION_Y):
-            if BOARD[i][x] == '--':
-                valid_moves.append((x, i))
-            else:
-                break
-        # Check vertically upward
-        for i in range(y - 1, -1, -1):
-            if BOARD[i][x] == '--':
-                valid_moves.append((x, i))
-            else:
-                break
-
-    elif piece == 'b_B' or piece == 'w_B':
-        # Bishop can move diagonally
-        # Check diagonally to the bottom-right
-        for i, j in zip(range(x + 1, DIMENSION_X), range(y + 1, DIMENSION_Y)):
-            if BOARD[j][i] == '--':
-                valid_moves.append((i, j))
-            else:
-                break
-        # Check diagonally to the bottom-left
-        for i, j in zip(range(x - 1, -1, -1), range(y + 1, DIMENSION_Y)):
-            if BOARD[j][i] == '--':
-                valid_moves.append((i, j))
-            else:
-                break
-        # Check diagonally to the top-right
-        for i, j in zip(range(x + 1, DIMENSION_X), range(y - 1, -1, -1)):
-            if BOARD[j][i] == '--':
-                valid_moves.append((i, j))
-            else:
-                break
-        # Check diagonally to the top-left
-        for i, j in zip(range(x - 1, -1, -1), range(y - 1, -1, -1)):
-            if BOARD[j][i] == '--':
-                valid_moves.append((i, j))
-            else:
-                break
-
-    elif piece == 'b_Kn' or piece == 'w_Kn':
-        # Knight's L-shaped movement
-        knight_moves = [(2, 1), (2, -1), (-2, 1), (-2, -1),
-                        (1, 2), (1, -2), (-1, 2), (-1, -2)]
-
-        for dx, dy in knight_moves:
-            new_x = x + dx
-            new_y = y + dy
-
-            if 0 <= new_x < DIMENSION_X and 0 <= new_y < DIMENSION_Y and BOARD[new_y][new_x] == '--':
-                valid_moves.append((new_x, new_y))
-
-    elif piece == 'b_P':
-        # Black pawn moves downward
-        if y + 1 < DIMENSION_Y and BOARD[y + 1][x] == '--':
-            valid_moves.append((x, y + 1))
-            if y == 1 and BOARD[y + 2][x] == '--':
-                valid_moves.append((x, y + 2))
-
-        # Capturing diagonally
-        if y + 1 < DIMENSION_Y and x - 1 >= 0 and BOARD[y + 1][x - 1] != '--':
-            valid_moves.append((x - 1, y + 1))
-        if y + 1 < DIMENSION_Y and x + 1 < DIMENSION_X and BOARD[y + 1][x + 1] != '--':
-            valid_moves.append((x + 1, y + 1))
-
-    elif piece == 'w_P':
-        # White pawn moves upward
-        if y - 1 >= 0 and BOARD[y - 1][x] == '--':
-            valid_moves.append((x, y - 1))
-            if y == 4 and BOARD[y - 2][x] == '--':
-                valid_moves.append((x, y - 2))
-
-        # Capturing diagonally
-        if y - 1 >= 0 and x - 1 >= 0 and BOARD[y - 1][x - 1] != '--':
-            valid_moves.append((x - 1, y - 1))
-        if y - 1 >= 0 and x + 1 < DIMENSION_X and BOARD[y - 1][x + 1] != '--':
-            valid_moves.append((x + 1, y - 1))
-
-    return valid_moves
-
-
 def drawButtons(WINDOW):
     # Draw "Play" button
     play_button_rect = pygame.Rect(
@@ -234,7 +133,6 @@ def drawButtons(WINDOW):
     WINDOW.blit(restart_text, restart_text_rect)
 
 
-# this should be deleted
 def mark_valid_pos(WINDOW, VALID_POS):
 
     for position in VALID_POS:
@@ -309,6 +207,7 @@ def main():
                 if restart_button_rect.collidepoint(event.pos):
                     print("Restart button pressed")
                     GAME_STATE.undoMove('all')
+                    moveMade = True
 
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_z:  # undo when z is pressed
