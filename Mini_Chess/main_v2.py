@@ -180,13 +180,6 @@ def main():
                     SELECTED_PIECE = (y_coord, x_coord)
                     pieceClickCount += 1
 
-                    # # check valid move
-                    # piece_id = GAME_STATE.board[x_coord][y_coord]
-                    # if piece_id != '--':
-                    #     valid_moves = get_valid_moves(
-                    #         piece_id, (y_coord, x_coord), GAME_STATE.board)
-                    #     valid_positions = valid_moves
-
                 # Check if "Play" button is clicked
                 if play_button_rect.collidepoint(event.pos):
                     print("Play button pressed")
@@ -205,10 +198,11 @@ def main():
 
         if pieceClickCount == 2:
 
-            print(selectedSq[0], selectedSq[1])
             move = engine.Move(selectedSq[0], selectedSq[1], GAME_STATE.board)
+            
             print(move.getChessNotation())
             GAME_STATE.makeMove(move)
+            
             pieceClickCount = 0
             selectedSq = []
 

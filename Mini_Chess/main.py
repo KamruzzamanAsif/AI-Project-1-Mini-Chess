@@ -5,21 +5,38 @@ from pygame.locals import *
 
 import engine
 
+pygame.init()
+
 ########################## HEADERS ##########################
 
 # Game Setup
 WINDOW_WIDTH = 300
-WINDOW_HEIGHT = 360
+WINDOW_HEIGHT = 450
 SQ_SIZE = 60
 DIMENSION_X = 5
 DIMENSION_Y = 6
 FPS = 60
 
 # BG color
-BACKGROUND = (122, 255, 255)
-BOARD_COLOR_A = pygame.Color('white')
-BOARD_COLOR_B = pygame.Color('light grey')
+BACKGROUND = pygame.Color('azure')
+BOARD_COLOR_A = pygame.Color('antiquewhite')
+BOARD_COLOR_B = pygame.Color('darkseagreen4')
 HOVER_COLOR = (210, 140, 80)
+
+# Button colors
+PLAY_BUTTON_COLOR = pygame.Color('chartreuse4')
+RESTART_BUTTON_COLOR = pygame.Color('crimson')
+BUTTON_TEXT_COLOR = pygame.Color('white')
+
+
+# Button dimensions and positions
+BUTTON_WIDTH = 80
+BUTTON_HEIGHT = 40
+PLAY_BUTTON_POS = (40, 380)
+RESTART_BUTTON_POS = (180, 380)
+
+# Define button fonts
+BUTTON_FONT = pygame.font.SysFont('Arial', 20, bold=True)
 
 
 ########################## PROCESS FUNCTIONS ##########################
@@ -42,7 +59,8 @@ def drawGameState(WINDOW, GAME_STATE, VALID_POS):
     images = loadImages()
     drawBoard(WINDOW)
     drawPieces(WINDOW, GAME_STATE.board, images)
-    mark_valid_pos(WINDOW, VALID_POS)
+    # mark_valid_pos(WINDOW, VALID_POS)
+    drawButtons(WINDOW)
 
 
 def drawBoard(WINDOW):
@@ -177,7 +195,28 @@ def get_valid_moves(piece, position, BOARD):
     return valid_moves
 
 
-## this should be deleted
+def drawButtons(WINDOW):
+    # Draw "Play" button
+    play_button_rect = pygame.Rect(
+        PLAY_BUTTON_POS[0], PLAY_BUTTON_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
+    pygame.draw.rect(WINDOW, PLAY_BUTTON_COLOR, play_button_rect)
+
+    play_text = BUTTON_FONT.render("Play", True, BUTTON_TEXT_COLOR)
+    play_text_rect = play_text.get_rect(center=play_button_rect.center)
+    WINDOW.blit(play_text, play_text_rect)
+
+    # Draw "Restart" button
+    restart_button_rect = pygame.Rect(
+        RESTART_BUTTON_POS[0], RESTART_BUTTON_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
+    pygame.draw.rect(WINDOW, RESTART_BUTTON_COLOR, restart_button_rect)
+
+    restart_text = BUTTON_FONT.render("Restart", True, BUTTON_TEXT_COLOR)
+    restart_text_rect = restart_text.get_rect(
+        center=restart_button_rect.center)
+    WINDOW.blit(restart_text, restart_text_rect)
+
+
+# this should be deleted
 def mark_valid_pos(WINDOW, VALID_POS):
 
     for position in VALID_POS:
@@ -203,9 +242,19 @@ def main():
     GAME_STATE = engine.GameState()
     SELECTED_PIECE = None
 
+    # Define the board area rect
+    board_rect = pygame.Rect(
+        0, 0, DIMENSION_X * SQ_SIZE, DIMENSION_Y * SQ_SIZE)
+
+    # Button Rectengulars
+    play_button_rect = pygame.Rect(
+        PLAY_BUTTON_POS[0], PLAY_BUTTON_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
+    restart_button_rect = pygame.Rect(
+        RESTART_BUTTON_POS[0], RESTART_BUTTON_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
+
     # Get valid moves
     validMoves = GAME_STATE.getValidMoves()
-    moveMade = False #flag variable when a move is made
+    moveMade = False  # flag variable when a move is made
 
     # The main game loop
     running = True
@@ -222,42 +271,43 @@ def main():
                 sys.exit()
 
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                y_coord = event.pos[0] // SQ_SIZE
-                x_coord = event.pos[1] // SQ_SIZE
-                selectedSq.append((x_coord, y_coord))
+                if board_rect.collidepoint(event.pos):
+                    y_coord = event.pos[0] // SQ_SIZE
+                    x_coord = event.pos[1] // SQ_SIZE
+                    selectedSq.append((x_coord, y_coord))
 
-                # mark selected piece
-                SELECTED_PIECE = (y_coord, x_coord)
-                pieceClickCount += 1
+                    # mark selected piece
+                    SELECTED_PIECE = (y_coord, x_coord)
+                    pieceClickCount += 1
 
-                # # check valid move
-                # piece_id = GAME_STATE.board[x_coord][y_coord]
-                # if piece_id != '--':
-                #     valid_moves = get_valid_moves(
-                #         piece_id, (y_coord, x_coord), GAME_STATE.board)
-                #     valid_positions = valid_moves
+                # Check if "Play" button is clicked
+                if play_button_rect.collidepoint(event.pos):
+                    print("Play button pressed")
+
+                # Check if "Restart" button is clicked
+                if restart_button_rect.collidepoint(event.pos):
+                    print("Restart button pressed")
+                    GAME_STATE.undoMove('all')
 
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_z: #undo when z is pressed
+                if event.key == pygame.K_z:  # undo when z is pressed
                     GAME_STATE.undoMove()
                     moveMade = True
-
 
         # update valid moves
         if moveMade:
             validMoves = GAME_STATE.getValidMoves()
             moveMade = False
 
-
         # Set Game State
         drawGameState(WINDOW, GAME_STATE, valid_positions)
 
+        # define piece movement
         if pieceClickCount == 2:
 
-            print(selectedSq[0], selectedSq[1])
             move = engine.Move(selectedSq[0], selectedSq[1], GAME_STATE.board)
             print(move.getChessNotation())
-            
+
             # if move valid then make move
             if move in validMoves:
                 GAME_STATE.makeMove(move)
