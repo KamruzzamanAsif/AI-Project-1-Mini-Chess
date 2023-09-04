@@ -92,7 +92,27 @@ class GameState():
     '''
 
     def getRookMoves(self, r, c, moves):
-        pass
+        directions = ((-1, 0), (0, -1), (1, 0), (0, 1)) # up, left, down right
+        enemyColor = 'b' if self.whiteToMove else 'w'
+
+        for d in directions:
+            for i in range(1, 6):
+                endRow = r + d[0]*i
+                endCol = c + d[1]*i
+
+                if 0<= endRow < 6 and 0<= endCol < 5:   # check on board
+                    endPiece = self.board[endRow][endCol]
+                    if endPiece == '--': # empty space so valid
+                        moves.append(Move((r,c), (endRow, endCol), self.board))
+                    elif endPiece[0] == enemyColor:
+                        moves.append(Move((r,c), (endRow, endCol), self.board))
+                        break
+                    else: # friendly piece (own piece)
+                        break
+                else: # off board
+                    break 
+
+                        
 
 
     '''
@@ -100,7 +120,17 @@ class GameState():
     '''
 
     def getKnightMoves(self, r, c, moves):
-        pass
+        knightMoves = ((-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1))
+        allyColor = 'w' if self.whiteToMove else 'b'
+        
+        for m in knightMoves:
+            endRow = r + m[0]
+            endCol = c + m[1]
+            if 0<= endRow < 6 and 0<= endCol < 5:   # check on board
+                endPiece = self.board[endRow][endCol]
+                if endPiece[0] != allyColor:
+                    moves.append(Move((r,c), (endRow, endCol), self.board))
+
 
 
     '''
@@ -108,7 +138,25 @@ class GameState():
     '''
 
     def getBishopMoves(self, r, c, moves):
-        pass
+        directions = ((-1, -1), (-1, 1), (1, -1), (1, 1)) # all 4 diagonals
+        enemyColor = 'b' if self.whiteToMove else 'w'
+
+        for d in directions:
+            for i in range(1, 5): # a bishop can move maximum 4 diagonal squares
+                endRow = r + d[0]*i
+                endCol = c + d[1]*i
+
+                if 0<= endRow < 6 and 0<= endCol < 5:   # check on board
+                    endPiece = self.board[endRow][endCol]
+                    if endPiece == '--': # empty space so valid
+                        moves.append(Move((r,c), (endRow, endCol), self.board))
+                    elif endPiece[0] == enemyColor:
+                        moves.append(Move((r,c), (endRow, endCol), self.board))
+                        break
+                    else: # friendly piece (own piece)
+                        break
+                else: # off board
+                    break 
 
 
     '''
@@ -116,7 +164,8 @@ class GameState():
     '''
 
     def getQueenMoves(self, r, c, moves):
-        pass
+        self.getRookMoves(r, c, moves)
+        self.getBishopMoves(r, c, moves) 
 
 
     '''
@@ -124,11 +173,18 @@ class GameState():
     '''
 
     def getKingMoves(self, r, c, moves):
-        pass
+        kingMoves = ((-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1))
+        allyColor = 'w' if self.whiteToMove else 'b'
+        for i in range(len(kingMoves)):
+            endRow = r + kingMoves[i][0]
+            endCol = c + kingMoves[i][1]
+            if 0<= endRow < 6 and 0<= endCol < 5:   # check on board
+                endPiece = self.board[endRow][endCol]
+                if endPiece[0] != allyColor: # not an ally (empty or enemy piece)
+                    moves.append(Move((r,c), (endRow, endCol), self.board))
 
 
    
-
 
 
     
