@@ -213,8 +213,11 @@ def main():
             if move in validMoves:
                 GAME_STATE.makeMove(move)
                 moveMade = True
-            pieceClickCount = 0
-            selectedSq = []
+                pieceClickCount = 0
+                selectedSq = []
+            else:
+                pieceClickCount = 1
+                selectedSq.remove(selectedSq[0])
 
         # Draw red border if a piece is selected
         if SELECTED_PIECE is not None and pieceClickCount == 1:
