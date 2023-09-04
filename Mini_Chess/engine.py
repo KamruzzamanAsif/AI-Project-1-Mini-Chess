@@ -14,30 +14,37 @@ class GameState():
         self.whiteToMove = True
         self.moveLog = []
 
-    #makes moves except castling, en passant, pawn promotion
+    # makes moves except castling, en passant, pawn promotion
     def makeMove(self, move):
         self.board[move.startRow][move.startCol] = "--"
         self.board[move.endRow][move.endCol] = move.pieceMoved
         self.moveLog.append(move)
         self.whiteToMove = not self.whiteToMove
 
-    def undoMove(self):
-        if len(self.moveLog) != 0:
+    def undoMove(self, mode='single'):
+        if mode == 'all':
+            while len(self.moveLog) != 0:
+                move = self.moveLog.pop()
+                self.board[move.startRow][move.startCol] = move.pieceMoved
+                self.board[move.endRow][move.endCol] = move.pieceCaptured
+                self.whiteToMove = not self.whiteToMove
+
+        elif len(self.moveLog) != 0:
             move = self.moveLog.pop()
             self.board[move.startRow][move.startCol] = move.pieceMoved
             self.board[move.endRow][move.endCol] = move.pieceCaptured
             self.whiteToMove = not self.whiteToMove
 
-
-    ###>>>>>>>>>>>>   Move Generation Section <<<<<<<<<<<<<<<<<<
+    # >>>>>>>>>>>>   Move Generation Section <<<<<<<<<<<<<<<<<<
 
     # all moves with considering checks
+
     def getValidMoves(self):
         return self.getAllPossibleMoves()
-    
+
     # all moves without considering checks
     def getAllPossibleMoves(self):
-        moves = [Move((3,4), (4,4), self.board)]
+        moves = [Move((3, 4), (4, 4), self.board)]
         for r in range(len(self.board)):
             for c in range(len(self.board[r])):
                 turn = self.board[r][c][0]
@@ -48,21 +55,21 @@ class GameState():
                     elif piece == 'R':
                         self.getRookMoves(r, c, moves)
 
-        return moves 
+        return moves
 
     '''
     Get all the pawn moves for a pawn located at row, column and add these moves to list
     '''
+
     def getPawnMoves(self, r, c, moves):
         pass
 
     '''
     Get all the rook moves for a pawn located at row, column and add these moves to list
     '''
+
     def getRookMoves(self, r, c, moves):
         pass
-
-
 
 
 class Move():
@@ -94,17 +101,18 @@ class Move():
         self.endCol = endSq[1]
         self.pieceMoved = board[self.startRow][self.startCol]
         self.pieceCaptured = board[self.endRow][self.endCol]
-        self.moveID = self.startRow * 1000 + self.startCol * 100 + self.endRow * 10 + self.endCol
+        self.moveID = self.startRow * 1000 + self.startCol * \
+            100 + self.endRow * 10 + self.endCol
         print(self.moveID)
-    
+
     '''
     Overriding the equals method
     '''
+
     def __eq__(self, other):
         if isinstance(other, Move):
             return self.moveID == other.moveID
         return False
-    
 
     def getChessNotation(self):
         return self.getRankFile(self.startRow, self.startCol) + ' >> ' + self.getRankFile(self.endRow, self.endCol)
