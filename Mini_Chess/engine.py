@@ -128,7 +128,25 @@ class GameState():
     '''
 
     def getBishopMoves(self, r, c, moves):
-        pass
+        directions = ((-1, -1), (-1, 1), (1, -1), (1, 1)) # all 4 diagonals
+        enemyColor = 'b' if self.whiteToMove else 'w'
+
+        for d in directions:
+            for i in range(1, 5): # a bishop can move maximum 4 diagonal squares
+                endRow = r + d[0]*i
+                endCol = c + d[1]*i
+
+                if 0<= endRow < 6 and 0<= endCol < 5:   # check on board
+                    endPiece = self.board[endRow][endCol]
+                    if endPiece == '--': # empty space so valid
+                        moves.append(Move((r,c), (endRow, endCol), self.board))
+                    elif endPiece[0] == enemyColor:
+                        moves.append(Move((r,c), (endRow, endCol), self.board))
+                        break
+                    else: # friendly piece (own piece)
+                        break
+                else: # off board
+                    break 
 
 
     '''
