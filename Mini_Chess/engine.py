@@ -45,7 +45,7 @@ class GameState():
                 self.board[move.startRow][move.startCol] = move.pieceMoved
                 self.board[move.endRow][move.endCol] = move.pieceCaptured
                 self.whiteToMove = not self.whiteToMove
-            # reset the king's location to inital after undo all
+            # reset the king's location to initial after undo all
             # this means a new game
             # king location
             self.whiteKingLocation = (5, 4)
