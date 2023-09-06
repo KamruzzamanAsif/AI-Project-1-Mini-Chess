@@ -3,7 +3,7 @@ import random
 pieceValue = {"K": 0, "Q": 10, "R": 3, "B": 3, "N": 5, "P": 3}
 CHECKMATE = 1000
 STALEMATE = 0
-DEPTH = 2
+DEPTH = 4
 
 def findRandomMove(validMoves):
     return validMoves[random.randint(0, len(validMoves)-1)]
@@ -67,21 +67,21 @@ def findMoveNegaMaxPruning(gamestate, validMoves, depth, alpha, beta, turnMultip
 
 #positive is good for white and negative is good for black
 def scoreBoard(gamestate):
-    if gamestate.checkmate:
+    if gamestate.checkMate:
         if gamestate.whiteToMove:
             return -CHECKMATE
         else: return CHECKMATE
 
-    elif gamestate.stalemate:
+    elif gamestate.staleMate:
         return STALEMATE
     
     score = 0
     for row in gamestate.board:
         for square in row:
             if square[0] == 'w':
-                score += pieceValue[square[1]]
-            elif score[0] == 'b':
-                score -= pieceValue[square[1]]
+                score += pieceValue[square[-1]]
+            elif square[0] == 'b':
+                score -= pieceValue[square[-1]]
 
     return score
 

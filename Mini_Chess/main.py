@@ -3,8 +3,9 @@ import sys
 import pygame
 from pygame.locals import *
 
-import ai
+import ai, smartMove
 import engine
+
 
 pygame.init()
 
@@ -324,7 +325,9 @@ def main():
         #! AI Move
         if not humanPlayer:
             # aiMove = ai.findRandomMove(validMoves)          # random ai move
-            aiMove = ai.findBestMove(GAME_STATE, validMoves)  # naive approach
+            # aiMove = ai.findBestMove(GAME_STATE, validMoves)  # naive approach
+
+            aiMove = smartMove.findBestMove(GAME_STATE, validMoves)  # good approach
             GAME_STATE.makeMove(aiMove)
             moveMade = True
             animate = True
