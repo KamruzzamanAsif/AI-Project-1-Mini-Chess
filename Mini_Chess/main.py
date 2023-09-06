@@ -55,11 +55,38 @@ def loadImages():
     return IMAGES
 
 
-def drawGameState(WINDOW, GAME_STATE, VALID_POS):
-    images = loadImages()
+'''
+Highlight square selected
+'''
+
+
+def highlightSquare(WINDOW, GAME_STATE, validMoves, sqSelected):
+    if len(sqSelected) != 0:
+        row, col = sqSelected[0]
+        print(sqSelected[0])
+        # a piece that can be moved
+        if GAME_STATE.board[row][col][0] == ('w' if GAME_STATE.whiteToMove else 'b'):
+
+            # hightlight square
+            surface = pygame.Surface((SQ_SIZE, SQ_SIZE))
+            # transparency value (0 - transparent, 255 - solid)
+            surface.set_alpha(100)
+            surface.fill(pygame.Color('blue'))
+            WINDOW.blit(surface, (col*SQ_SIZE, row*SQ_SIZE))
+
+            # highlight moves
+            surface.fill(pygame.Color('yellow'))
+
+            for move in validMoves:
+                if move.startRow == row and move.startCol == col:
+                    WINDOW.blit(
+                        surface, (SQ_SIZE*move.endCol, SQ_SIZE*move.endRow))
+
+
+def drawGameState(WINDOW, GAME_STATE, validMoves, sqSelected):
     drawBoard(WINDOW)
-    drawPieces(WINDOW, GAME_STATE.board, images)
-    # mark_valid_pos(WINDOW, VALID_POS)
+    highlightSquare(WINDOW, GAME_STATE, validMoves, sqSelected)
+    drawPieces(WINDOW, GAME_STATE.board,  loadImages())
     drawButtons(WINDOW)
 
 
@@ -141,6 +168,22 @@ def mark_valid_pos(WINDOW, VALID_POS):
         pygame.draw.rect(WINDOW, pygame.Color('red'), valid_rect, 3)
 
 
+'''
+Animating the piece movement
+'''
+
+
+def animateMove(move, WINDOW, board, clock):
+    coords = []     # to which the animation will move through
+    dR = move.endRow - move.startRow
+    dC = move.endCol - move.startCol
+    framePerSquare = 10
+    frameCount = (abs(dR) + abs(dC)) * framePerSquare
+    
+    for frame in range(frameCount + 1):
+        coords.append((move.startRow + dR*frame/frameCount, move.startCol + dC*frame/framePerSquare))
+         
+
 ########################## MAIN FUNCTION ##########################
 
 
@@ -148,7 +191,6 @@ def main():
 
     # initialize pygame
     pygame.init()
-    valid_positions = []
     pieceClickCount = 0
     selectedSq = []
 
@@ -159,7 +201,6 @@ def main():
 
     # Set GameState
     GAME_STATE = engine.GameState()
-    SELECTED_PIECE = None
 
     # Define the board area rect
     board_rect = pygame.Rect(
@@ -220,7 +261,7 @@ def main():
             moveMade = False
 
         # Set Game State
-        drawGameState(WINDOW, GAME_STATE, valid_positions)
+        drawGameState(WINDOW, GAME_STATE, validMoves, selectedSq)
 
         # define piece movement
         if pieceClickCount == 2:
@@ -237,12 +278,6 @@ def main():
             else:
                 pieceClickCount = 1
                 selectedSq.remove(selectedSq[0])
-
-        # Draw red border if a piece is selected
-        if SELECTED_PIECE is not None and pieceClickCount == 1:
-            SELECTED_RECT = pygame.Rect(
-                SELECTED_PIECE[0] * SQ_SIZE, SELECTED_PIECE[1] * SQ_SIZE, SQ_SIZE, SQ_SIZE)
-            pygame.draw.rect(WINDOW, pygame.Color('blue'), SELECTED_RECT, 3)
 
         # Update the window state
         pygame.display.update()
