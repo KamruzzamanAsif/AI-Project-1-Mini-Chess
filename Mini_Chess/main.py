@@ -4,6 +4,7 @@ import pygame
 from pygame.locals import *
 
 import engine
+from ai import findRandomMove
 
 pygame.init()
 
@@ -177,7 +178,6 @@ Animating the piece movement
 
 
 def animateMove(move, WINDOW, board, clock):
-    coords = []     # to which the animation will move through
     dR = move.endRow - move.startRow
     dC = move.endCol - move.startCol
     framePerSquare = 10
@@ -216,10 +216,15 @@ def main():
 
     # initialize pygame
     pygame.init()
+
+    # variables
     pieceClickCount = 0
     selectedSq = []
     animate = False
-    gaveOver = False
+    # if human plays its TRUE, if AI plays then its FALSE (white)
+    playerOne = True
+    # -Do- (black)
+    playerTwo = False
 
     # Set Display
     WINDOW = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -233,7 +238,7 @@ def main():
     board_rect = pygame.Rect(
         0, 0, DIMENSION_X * SQ_SIZE, DIMENSION_Y * SQ_SIZE)
 
-    # Button Rectengulars
+    # Button Rects
     play_button_rect = pygame.Rect(
         PLAY_BUTTON_POS[0], PLAY_BUTTON_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
     restart_button_rect = pygame.Rect(
@@ -251,6 +256,10 @@ def main():
         WINDOW.fill(BACKGROUND)
         clock.tick(FPS)
 
+        # check if Human is playing...
+        humanPlayer = (GAME_STATE.whiteToMove and playerOne) or (
+            not GAME_STATE.whiteToMove and playerTwo)
+
         # Event handling
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -258,13 +267,40 @@ def main():
                 sys.exit()
 
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if board_rect.collidepoint(event.pos):
-                    y_coord = event.pos[0] // SQ_SIZE
-                    x_coord = event.pos[1] // SQ_SIZE
-                    selectedSq.append((x_coord, y_coord))
 
-                    # mark selected piece
-                    pieceClickCount += 1
+                # Click squares to move the piece
+                if board_rect.collidepoint(event.pos):
+                    if humanPlayer:
+                        y_coord = event.pos[0] // SQ_SIZE
+                        x_coord = event.pos[1] // SQ_SIZE
+
+                        # if same square is clicked twice then reset
+                        if selectedSq == (x_coord, y_coord):
+                            selectedSq = ()
+                            pieceClickCount = 0
+                        else:
+                            selectedSq.append((x_coord, y_coord))
+                            pieceClickCount += 1
+
+                        # when the piece are to be moved
+                        if pieceClickCount == 2:
+
+                            move = engine.Move(
+                                selectedSq[0], selectedSq[1], GAME_STATE.board)
+                            print(move.getChessNotation())
+
+                            # if move is valid then make move
+                            for i in range(len(validMoves)):
+                                if move == validMoves[i]:
+                                    GAME_STATE.makeMove(move)
+                                    moveMade = True
+                                    animate = True
+                                    pieceClickCount = 0
+                                    selectedSq = []
+
+                            if not moveMade:
+                                pieceClickCount = 1
+                                selectedSq.remove(selectedSq[0])
 
                 # Check if "Play" button is clicked
                 if play_button_rect.collidepoint(event.pos):
@@ -285,6 +321,13 @@ def main():
                     moveMade = True
                     animate = False
 
+        #! AI Move
+        if not humanPlayer:
+            aiMove = findRandomMove(validMoves)
+            GAME_STATE.makeMove(aiMove)
+            moveMade = True
+            animate = True
+
         # update valid moves
         if moveMade:
             if animate:
@@ -292,26 +335,10 @@ def main():
                             WINDOW, GAME_STATE.board, clock)
             validMoves = GAME_STATE.getValidMoves()
             moveMade = False
+            animate = False
 
         # Set Game State
         drawGameState(WINDOW, GAME_STATE, validMoves, selectedSq)
-
-        # define piece movement
-        if pieceClickCount == 2:
-
-            move = engine.Move(selectedSq[0], selectedSq[1], GAME_STATE.board)
-            print(move.getChessNotation())
-
-            # if move valid then make move
-            if move in validMoves:
-                GAME_STATE.makeMove(move)
-                moveMade = True
-                pieceClickCount = 0
-                selectedSq = []
-                animate = True
-            else:
-                pieceClickCount = 1
-                selectedSq.remove(selectedSq[0])
 
         # Update the window state
         pygame.display.update()
