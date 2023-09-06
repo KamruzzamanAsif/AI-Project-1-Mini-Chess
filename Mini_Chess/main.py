@@ -3,8 +3,8 @@ import sys
 import pygame
 from pygame.locals import *
 
+import ai
 import engine
-from ai import findRandomMove
 
 pygame.init()
 
@@ -323,7 +323,8 @@ def main():
 
         #! AI Move
         if not humanPlayer:
-            aiMove = findRandomMove(validMoves)
+            # aiMove = ai.findRandomMove(validMoves)          # random ai move
+            aiMove = ai.findBestMove(GAME_STATE, validMoves)  # naive approach
             GAME_STATE.makeMove(aiMove)
             moveMade = True
             animate = True
