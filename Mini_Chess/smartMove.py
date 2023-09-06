@@ -39,16 +39,16 @@ def findBestMove(gamestate, validMoves):
     global nextMove
     nextMove = None
     random.shuffle(validMoves)
-    findMoveNegaMaxPruning(gamestate, validmoves, DEPTH, -CHECKMATE, CHECKMATE, 1 if gamestate.whiteToMove else -1)
+    findMoveNegaMaxPruning(gamestate, validMoves, DEPTH, -CHECKMATE, CHECKMATE, 1 if gamestate.whiteToMove else -1)
     return nextMove
 
-def findMoveNegaMaxPruning(gamestate, validmoves, depth, alpha, beta, turnMultiplier):
+def findMoveNegaMaxPruning(gamestate, validMoves, depth, alpha, beta, turnMultiplier):
     global nextMove
     if depth == 0:
         return turnMultiplier * scoreBoard(gamestate)
     
     maxScore = -CHECKMATE
-    for move in validmoves:
+    for move in validMoves:
         gamestate.makeMove(move)
         nextMoves = gamestate.getValidMoves()
         score = -findMoveNegaMaxPruning(gamestate, nextMoves, depth-1, -beta, -alpha, -turnMultiplier)
