@@ -75,6 +75,7 @@ def highlightSquare(WINDOW, GAME_STATE, validMoves, sqSelected):
             WINDOW.blit(surface, (col*SQ_SIZE, row*SQ_SIZE))
 
             # highlight moves
+            # TODO: if it's checkmate then the king should be colored as red
             surface.fill(pygame.Color('yellow'))
 
             for move in validMoves:
@@ -86,7 +87,7 @@ def highlightSquare(WINDOW, GAME_STATE, validMoves, sqSelected):
 def drawGameState(WINDOW, GAME_STATE, validMoves, sqSelected):
     drawBoard(WINDOW)
     highlightSquare(WINDOW, GAME_STATE, validMoves, sqSelected)
-    drawPieces(WINDOW, GAME_STATE.board,  loadImages())
+    drawPieces(WINDOW, GAME_STATE.board)
     drawButtons(WINDOW)
 
 
@@ -129,7 +130,9 @@ def drawBoard(WINDOW):
                             (DIMENSION_Y-1) * SQ_SIZE + 45))
 
 
-def drawPieces(WINDOW, Board, IMAGES):
+def drawPieces(WINDOW, Board):
+
+    IMAGES = loadImages()
 
     for row in range(DIMENSION_X):
         for col in range(DIMENSION_Y):
@@ -179,10 +182,32 @@ def animateMove(move, WINDOW, board, clock):
     dC = move.endCol - move.startCol
     framePerSquare = 10
     frameCount = (abs(dR) + abs(dC)) * framePerSquare
-    
+    IMAGES = loadImages()
+
     for frame in range(frameCount + 1):
-        coords.append((move.startRow + dR*frame/frameCount, move.startCol + dC*frame/framePerSquare))
-         
+        row, col = (move.startRow + dR*frame/frameCount,
+                    move.startCol + dC*frame/frameCount)
+
+        # redraw the board
+        drawBoard(WINDOW)
+        drawPieces(WINDOW, board)
+
+        # erase piece from ending square
+        endSquare = pygame.Rect(move.endCol*SQ_SIZE,
+                                move.endRow*SQ_SIZE, SQ_SIZE, SQ_SIZE)
+        pygame.draw.rect(WINDOW, (BOARD_COLOR_A if (
+            (move.endRow+move.endCol) % 2 == 0) else BOARD_COLOR_B), endSquare)
+
+        # draw captured piece onto the square
+        if move.pieceCaptured != '--':
+            WINDOW.blit(IMAGES[move.pieceCaptured], endSquare)
+
+        # draw moving piece
+        WINDOW.blit(IMAGES[move.pieceMoved], pygame.Rect(
+            col*SQ_SIZE, row*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+        pygame.display.update()
+        clock.tick(60)
+
 
 ########################## MAIN FUNCTION ##########################
 
@@ -193,10 +218,12 @@ def main():
     pygame.init()
     pieceClickCount = 0
     selectedSq = []
+    animate = False
+    gaveOver = False
 
     # Set Display
     WINDOW = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-    pygame.display.set_caption('Hello from Pygame')
+    pygame.display.set_caption('♟️ Mini Chess ♟️')
     clock = pygame.time.Clock()
 
     # Set GameState
@@ -237,7 +264,6 @@ def main():
                     selectedSq.append((x_coord, y_coord))
 
                     # mark selected piece
-                    SELECTED_PIECE = (y_coord, x_coord)
                     pieceClickCount += 1
 
                 # Check if "Play" button is clicked
@@ -246,17 +272,24 @@ def main():
 
                 # Check if "Restart" button is clicked
                 if restart_button_rect.collidepoint(event.pos):
-                    print("Restart button pressed")
-                    GAME_STATE.undoMove('all')
-                    moveMade = True
+                    GAME_STATE = engine.GameState()
+                    validMoves = GAME_STATE.getValidMoves()
+                    selectedSq = []
+                    pieceClickCount = 0
+                    moveMade = False
+                    animate = False
 
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_z:  # undo when z is pressed
                     GAME_STATE.undoMove()
                     moveMade = True
+                    animate = False
 
         # update valid moves
         if moveMade:
+            if animate:
+                animateMove(GAME_STATE.moveLog[-1],
+                            WINDOW, GAME_STATE.board, clock)
             validMoves = GAME_STATE.getValidMoves()
             moveMade = False
 
@@ -275,6 +308,7 @@ def main():
                 moveMade = True
                 pieceClickCount = 0
                 selectedSq = []
+                animate = True
             else:
                 pieceClickCount = 1
                 selectedSq.remove(selectedSq[0])
