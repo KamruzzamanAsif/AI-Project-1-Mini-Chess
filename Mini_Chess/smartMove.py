@@ -1,14 +1,15 @@
 import random
 
 pieceValue = {"K": 0, "Q": 10, "R": 3, "B": 3, "N": 5, "P": 3}
-CHECKMATE = 1000
+CHECKMATE = float('inf')
 STALEMATE = 0
 DEPTH = 4
+
 
 def findRandomMove(validMoves):
     return validMoves[random.randint(0, len(validMoves)-1)]
 
-#naive
+# naive
 # def findBestMove(gamestate, validMoves):
 #     if gamestate.whiteToMove:
 #         turnMultiplier = 1
@@ -35,6 +36,7 @@ def findRandomMove(validMoves):
 #         gamestate.undoMove()
 #     return bestMove
 
+
 def findBestMove(gamestate, validMoves):
     global nextMove
     nextMove = None
@@ -42,21 +44,23 @@ def findBestMove(gamestate, validMoves):
     findMoveNegaMaxPruning(gamestate, validMoves, DEPTH, -CHECKMATE, CHECKMATE, 1 if gamestate.whiteToMove else -1)
     return nextMove
 
+
 def findMoveNegaMaxPruning(gamestate, validMoves, depth, alpha, beta, turnMultiplier):
     global nextMove
     if depth == 0:
         return turnMultiplier * scoreBoard(gamestate)
-    
+
     maxScore = -CHECKMATE
     for move in validMoves:
         gamestate.makeMove(move)
         nextMoves = gamestate.getValidMoves()
-        score = -findMoveNegaMaxPruning(gamestate, nextMoves, depth-1, -beta, -alpha, -turnMultiplier)
+        score = -findMoveNegaMaxPruning(gamestate, nextMoves,
+                                        depth-1, -beta, -alpha, -turnMultiplier)
         if score > maxScore:
             maxScore = score
             if depth == DEPTH:
                 nextMove = move
-            
+
         gamestate.undoMove()
         if maxScore > alpha:
             alpha = maxScore
@@ -65,16 +69,19 @@ def findMoveNegaMaxPruning(gamestate, validMoves, depth, alpha, beta, turnMultip
 
     return maxScore
 
-#positive is good for white and negative is good for black
+# positive is good for white and negative is good for black
+
+
 def scoreBoard(gamestate):
     if gamestate.checkMate:
         if gamestate.whiteToMove:
             return -CHECKMATE
-        else: return CHECKMATE
+        else:
+            return CHECKMATE
 
     elif gamestate.staleMate:
         return STALEMATE
-    
+
     score = 0
     for row in gamestate.board:
         for square in row:
@@ -85,7 +92,7 @@ def scoreBoard(gamestate):
 
     return score
 
-#score the board based on material
+# score the board based on material
 # def scoreMaterial(board):
 #     score = 0
 #     for row in board:
