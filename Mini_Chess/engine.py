@@ -293,6 +293,7 @@ class Move():
         return False
 
     def getChessNotation(self):
+        
         return self.getRankFile(self.startRow, self.startCol) + ' >> ' + self.getRankFile(self.endRow, self.endCol)
 
     def getRankFile(self, r, c):

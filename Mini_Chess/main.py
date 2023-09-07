@@ -43,6 +43,15 @@ BUTTON_FONT = pygame.font.SysFont('Arial', 20, bold=True)
 
 ########################## PROCESS FUNCTIONS ##########################
 
+def loadSoundEffects():
+
+    effects = {}
+    move_piece = pygame.mixer.Sound('./audios/move_pieces.wav')
+    undo_move = pygame.mixer.Sound('./audios/undo_moves.wav')
+    effects['move'] = move_piece
+    effects['undo'] = undo_move
+    return effects
+
 
 def loadImages():
 
@@ -62,10 +71,11 @@ Highlight square selected
 '''
 
 
-def highlightSquare(WINDOW, GAME_STATE, validMoves, sqSelected):
+def highlightSquare(WINDOW, GAME_STATE, validMoves, sqSelected, lastMove):
+
     if len(sqSelected) != 0:
         row, col = sqSelected[0]
-        print(sqSelected[0])
+
         # a piece that can be moved
         if GAME_STATE.board[row][col][0] == ('w' if GAME_STATE.whiteToMove else 'b'):
 
@@ -78,6 +88,7 @@ def highlightSquare(WINDOW, GAME_STATE, validMoves, sqSelected):
 
             # highlight moves
             # TODO: if it's checkmate then the king should be colored as red
+
             surface.fill(pygame.Color('yellow'))
 
             for move in validMoves:
@@ -85,10 +96,40 @@ def highlightSquare(WINDOW, GAME_STATE, validMoves, sqSelected):
                     WINDOW.blit(
                         surface, (SQ_SIZE*move.endCol, SQ_SIZE*move.endRow))
 
+    # Highlight the last moved piece
+    if len(lastMove) != 0:
+        startRow, startCol = lastMove[0]
+        endRow, endCol = lastMove[1]
 
-def drawGameState(WINDOW, GAME_STATE, validMoves, sqSelected):
+        if startRow is not None and startCol is not None:
+            surface = pygame.Surface((SQ_SIZE, SQ_SIZE))
+            surface.set_alpha(100)
+            surface.fill(pygame.Color('green'))
+            WINDOW.blit(surface, (startCol*SQ_SIZE, startRow*SQ_SIZE))
+
+        if endRow is not None and endCol is not None:
+            surface = pygame.Surface((SQ_SIZE, SQ_SIZE))
+            surface.set_alpha(100)
+            surface.fill(pygame.Color('green'))
+            WINDOW.blit(surface, (endCol*SQ_SIZE, endRow*SQ_SIZE))
+
+
+def markMovedSquare(WINDOW, sqSelected):
+
+    startRow, startCol = sqSelected[0]
+    endRow, endCol = sqSelected[1]
+
+    if startRow is not None and startCol is not None:
+        print("ARE YOU THERE")
+        surface = pygame.Surface((SQ_SIZE, SQ_SIZE))
+        surface.set_alpha(100)
+        surface.fill(pygame.Color('red'))
+        WINDOW.blit(surface, (startCol*SQ_SIZE, startRow*SQ_SIZE))
+
+
+def drawGameState(WINDOW, GAME_STATE, validMoves, sqSelected, lastMove):
     drawBoard(WINDOW)
-    highlightSquare(WINDOW, GAME_STATE, validMoves, sqSelected)
+    highlightSquare(WINDOW, GAME_STATE, validMoves, sqSelected, lastMove)
     drawPieces(WINDOW, GAME_STATE.board)
     drawButtons(WINDOW)
 
@@ -165,14 +206,6 @@ def drawButtons(WINDOW):
     WINDOW.blit(restart_text, restart_text_rect)
 
 
-def mark_valid_pos(WINDOW, VALID_POS):
-
-    for position in VALID_POS:
-        valid_rect = pygame.Rect(
-            position[0] * SQ_SIZE, position[1] * SQ_SIZE, SQ_SIZE, SQ_SIZE)
-        pygame.draw.rect(WINDOW, pygame.Color('red'), valid_rect, 3)
-
-
 '''
 Animating the piece movement
 '''
@@ -226,6 +259,7 @@ def main():
     playerOne = True
     # -Do- (black)
     playerTwo = False
+    lastMove = []
 
     # Set Display
     WINDOW = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -296,6 +330,12 @@ def main():
                                     GAME_STATE.makeMove(move)
                                     moveMade = True
                                     animate = True
+                                    lastMove = selectedSq
+
+                                    # playing move piece sound
+                                    sound_effects = loadSoundEffects()
+                                    sound_effects['move'].play()
+
                                     pieceClickCount = 0
                                     selectedSq = []
 
@@ -322,6 +362,15 @@ def main():
                     moveMade = True
                     animate = False
 
+        # update valid moves
+        if moveMade:
+            if animate:
+                animateMove(GAME_STATE.moveLog[-1],
+                            WINDOW, GAME_STATE.board, clock)
+            validMoves = GAME_STATE.getValidMoves()
+            moveMade = False
+            animate = False
+
         #! AI Move
         if not humanPlayer:
             # aiMove = ai.findRandomMove(validMoves)          # random ai move
@@ -333,17 +382,16 @@ def main():
             moveMade = True
             animate = True
 
-        # update valid moves
-        if moveMade:
-            if animate:
-                animateMove(GAME_STATE.moveLog[-1],
-                            WINDOW, GAME_STATE.board, clock)
-            validMoves = GAME_STATE.getValidMoves()
-            moveMade = False
-            animate = False
+            # playing piece moving sound
+            sound_effects = loadSoundEffects()
+            sound_effects['move'].play()
+
+            # track last move
+            lastMove = [(aiMove.startRow, aiMove.startCol),
+                        (aiMove.endRow, aiMove.endCol)]
 
         # Set Game State
-        drawGameState(WINDOW, GAME_STATE, validMoves, selectedSq)
+        drawGameState(WINDOW, GAME_STATE, validMoves, selectedSq, lastMove)
 
         # Update the window state
         pygame.display.update()
