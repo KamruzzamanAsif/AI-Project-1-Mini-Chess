@@ -1,13 +1,15 @@
-
-import random
 import sys
 
 import pygame
 from pygame.locals import *
 
+import ai
 import engine
+import smartMove
 
 pygame.init()
+
+########################## HEADERS ##########################
 
 # Game Setup
 WINDOW_WIDTH = 300
@@ -39,11 +41,23 @@ RESTART_BUTTON_POS = (180, 380)
 BUTTON_FONT = pygame.font.SysFont('Arial', 20, bold=True)
 
 
+########################## PROCESS FUNCTIONS ##########################
+
+def loadSoundEffects():
+
+    effects = {}
+    move_piece = pygame.mixer.Sound('./audios/move_pieces.wav')
+    undo_move = pygame.mixer.Sound('./audios/undo_moves.wav')
+    effects['move'] = move_piece
+    effects['undo'] = undo_move
+    return effects
+
+
 def loadImages():
 
     IMAGES = {}
-    pieces = ['b_B', 'b_K', 'b_Kn', 'b_P', 'b_Q', 'b_R',
-              'w_B', 'w_K', 'w_Kn', 'w_P', 'w_Q', 'w_R']
+    pieces = ['b_B', 'b_K', 'b_N', 'b_P', 'b_Q', 'b_R',
+              'w_B', 'w_K', 'w_N', 'w_P', 'w_Q', 'w_R']
 
     for piece in pieces:
         image = pygame.image.load('images/' + piece + '.png')
@@ -52,10 +66,58 @@ def loadImages():
     return IMAGES
 
 
-def drawGameState(WINDOW, GAME_STATE, VALID_POS):
-    images = loadImages()
+'''
+Highlight square selected
+'''
+
+
+def highlightSquare(WINDOW, GAME_STATE, validMoves, sqSelected, lastMove):
+
+    if len(sqSelected) != 0:
+        row, col = sqSelected[0]
+
+        # a piece that can be moved
+        if GAME_STATE.board[row][col][0] == ('w' if GAME_STATE.whiteToMove else 'b'):
+
+            # hightlight square
+            surface = pygame.Surface((SQ_SIZE, SQ_SIZE))
+            # transparency value (0 - transparent, 255 - solid)
+            surface.set_alpha(100)
+            surface.fill(pygame.Color('blue'))
+            WINDOW.blit(surface, (col*SQ_SIZE, row*SQ_SIZE))
+
+            # highlight moves
+            # TODO: if it's checkmate then the king should be colored as red
+
+            surface.fill(pygame.Color('yellow'))
+
+            for move in validMoves:
+                if move.startRow == row and move.startCol == col:
+                    WINDOW.blit(
+                        surface, (SQ_SIZE*move.endCol, SQ_SIZE*move.endRow))
+
+    # Highlight the last moved piece
+    if len(lastMove) != 0:
+        startRow, startCol = lastMove[0]
+        endRow, endCol = lastMove[1]
+
+        if startRow is not None and startCol is not None:
+            surface = pygame.Surface((SQ_SIZE, SQ_SIZE))
+            surface.set_alpha(100)
+            surface.fill(pygame.Color('cyan'))
+            WINDOW.blit(surface, (startCol*SQ_SIZE, startRow*SQ_SIZE))
+
+        if endRow is not None and endCol is not None:
+            surface = pygame.Surface((SQ_SIZE, SQ_SIZE))
+            surface.set_alpha(100)
+            surface.fill(pygame.Coflor('cyan'))
+            WINDOW.blit(surface, (endCol*SQ_SIZE, endRow*SQ_SIZE))
+
+
+def drawGameState(WINDOW, GAME_STATE, validMoves, sqSelected, lastMove):
     drawBoard(WINDOW)
-    drawPieces(WINDOW, GAME_STATE.board, images)
+    highlightSquare(WINDOW, GAME_STATE, validMoves, sqSelected, lastMove)
+    drawPieces(WINDOW, GAME_STATE.board)
     drawButtons(WINDOW)
 
 
@@ -98,7 +160,9 @@ def drawBoard(WINDOW):
                             (DIMENSION_Y-1) * SQ_SIZE + 45))
 
 
-def drawPieces(WINDOW, Board, IMAGES):
+def drawPieces(WINDOW, Board):
+
+    IMAGES = loadImages()
 
     for row in range(DIMENSION_X):
         for col in range(DIMENSION_Y):
@@ -129,13 +193,60 @@ def drawButtons(WINDOW):
     WINDOW.blit(restart_text, restart_text_rect)
 
 
+'''
+Animating the piece movement
+'''
+
+
+def animateMove(move, WINDOW, board, clock):
+    dR = move.endRow - move.startRow
+    dC = move.endCol - move.startCol
+    framePerSquare = 10
+    frameCount = (abs(dR) + abs(dC)) * framePerSquare
+    IMAGES = loadImages()
+
+    for frame in range(frameCount + 1):
+        row, col = (move.startRow + dR*frame/frameCount,
+                    move.startCol + dC*frame/frameCount)
+
+        # redraw the board
+        drawBoard(WINDOW)
+        drawPieces(WINDOW, board)
+
+        # erase piece from ending square
+        endSquare = pygame.Rect(move.endCol*SQ_SIZE,
+                                move.endRow*SQ_SIZE, SQ_SIZE, SQ_SIZE)
+        pygame.draw.rect(WINDOW, (BOARD_COLOR_A if (
+            (move.endRow+move.endCol) % 2 == 0) else BOARD_COLOR_B), endSquare)
+
+        # draw captured piece onto the square
+        if move.pieceCaptured != '--':
+            WINDOW.blit(IMAGES[move.pieceCaptured], endSquare)
+
+        # draw moving piece
+        WINDOW.blit(IMAGES[move.pieceMoved], pygame.Rect(
+            col*SQ_SIZE, row*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+        pygame.display.update()
+        clock.tick(60)
+
+
+########################## MAIN FUNCTION ##########################
+
+
 def main():
 
     # initialize pygame
     pygame.init()
-    valid_positions = []
+
+    # variables
     pieceClickCount = 0
     selectedSq = []
+    animate = False
+    # if human plays its TRUE, if AI plays then its FALSE (white)
+    playerOne = True
+    # -Do- (black)
+    playerTwo = True
+    lastMove = []
 
     # Set Display
     WINDOW = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -144,17 +255,20 @@ def main():
 
     # Set GameState
     GAME_STATE = engine.GameState()
-    SELECTED_PIECE = None
 
     # Define the board area rect
     board_rect = pygame.Rect(
         0, 0, DIMENSION_X * SQ_SIZE, DIMENSION_Y * SQ_SIZE)
 
-    # Button Rectengulars
+    # Button Rects
     play_button_rect = pygame.Rect(
         PLAY_BUTTON_POS[0], PLAY_BUTTON_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
     restart_button_rect = pygame.Rect(
         RESTART_BUTTON_POS[0], RESTART_BUTTON_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
+
+    # Get valid moves
+    validMoves = GAME_STATE.getValidMoves()
+    moveMade = False  # flag variable when a move is made
 
     # The main game loop
     running = True
@@ -164,6 +278,10 @@ def main():
         WINDOW.fill(BACKGROUND)
         clock.tick(FPS)
 
+        # check if Human is playing...
+        humanPlayer = (GAME_STATE.whiteToMove and playerOne) or (
+            not GAME_STATE.whiteToMove and playerTwo)
+
         # Event handling
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -171,14 +289,46 @@ def main():
                 sys.exit()
 
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if board_rect.collidepoint(event.pos):
-                    y_coord = event.pos[0] // SQ_SIZE
-                    x_coord = event.pos[1] // SQ_SIZE
-                    selectedSq.append((x_coord, y_coord))
 
-                    # mark selected piece
-                    SELECTED_PIECE = (y_coord, x_coord)
-                    pieceClickCount += 1
+                # Click squares to move the piece
+                if board_rect.collidepoint(event.pos):
+                    if humanPlayer:
+                        y_coord = event.pos[0] // SQ_SIZE
+                        x_coord = event.pos[1] // SQ_SIZE
+
+                        # if same square is clicked twice then reset
+                        if selectedSq == (x_coord, y_coord):
+                            selectedSq = ()
+                            pieceClickCount = 0
+                        else:
+                            selectedSq.append((x_coord, y_coord))
+                            pieceClickCount += 1
+
+                        # when the piece are to be moved
+                        if pieceClickCount == 2:
+
+                            move = engine.Move(
+                                selectedSq[0], selectedSq[1], GAME_STATE.board)
+                            print(move.getChessNotation())
+
+                            # if move is valid then make move
+                            for i in range(len(validMoves)):
+                                if move == validMoves[i]:
+                                    GAME_STATE.makeMove(move)
+                                    moveMade = True
+                                    animate = True
+                                    lastMove = selectedSq
+
+                                    # playing move piece sound
+                                    sound_effects = loadSoundEffects()
+                                    sound_effects['move'].play()
+
+                                    pieceClickCount = 0
+                                    selectedSq = []
+
+                            if not moveMade:
+                                pieceClickCount = 1
+                                selectedSq.remove(selectedSq[0])
 
                 # Check if "Play" button is clicked
                 if play_button_rect.collidepoint(event.pos):
@@ -186,31 +336,52 @@ def main():
 
                 # Check if "Restart" button is clicked
                 if restart_button_rect.collidepoint(event.pos):
-                    print("Restart button pressed")
-                    GAME_STATE.undoMove('all')
+                    GAME_STATE = engine.GameState()
+                    validMoves = GAME_STATE.getValidMoves()
+                    selectedSq = []
+                    pieceClickCount = 0
+                    moveMade = False
+                    animate = False
 
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_z:  # undo when z is pressed
-                    GAME_STATE.undoMove()
+                    move = GAME_STATE.undoMove()
+                    moveMade = True
+                    animate = False
+                    sound_effects = loadSoundEffects()
+                    sound_effects['undo'].play()
+                    lastMove = [(move.startRow, move.startCol),
+                                (move.endRow, move.endCol)]
 
+        #! AI Move
+        if not humanPlayer:
+            # aiMove = ai.findRandomMove(validMoves)          # random ai move
+            # aiMove = ai.findBestMove(GAME_STATE, validMoves)  # naive approach
+
+            aiMove = smartMove.findBestMove(
+                GAME_STATE, validMoves)  # optimum approach
+            GAME_STATE.makeMove(aiMove)
+            moveMade = True
+            animate = True
+
+            # playing piece moving sound
+            sound_effects = loadSoundEffects()
+            sound_effects['move'].play()
+
+            # track last move
+            lastMove = [(aiMove.startRow, aiMove.startCol),
+                        (aiMove.endRow, aiMove.endCol)]
+
+        # update valid moves
+        if moveMade:
+            if animate:
+                animateMove(GAME_STATE.moveLog[-1],
+                            WINDOW, GAME_STATE.board, clock)
+            validMoves = GAME_STATE.getValidMoves()
+            moveMade = False
+            animate = False
         # Set Game State
-        drawGameState(WINDOW, GAME_STATE, valid_positions)
-
-        if pieceClickCount == 2:
-
-            move = engine.Move(selectedSq[0], selectedSq[1], GAME_STATE.board)
-            
-            print(move.getChessNotation())
-            GAME_STATE.makeMove(move)
-            
-            pieceClickCount = 0
-            selectedSq = []
-
-        # Draw red border if a piece is selected
-        if SELECTED_PIECE is not None and pieceClickCount == 1:
-            SELECTED_RECT = pygame.Rect(
-                SELECTED_PIECE[0] * SQ_SIZE, SELECTED_PIECE[1] * SQ_SIZE, SQ_SIZE, SQ_SIZE)
-            pygame.draw.rect(WINDOW, pygame.Color('blue'), SELECTED_RECT, 3)
+        drawGameState(WINDOW, GAME_STATE, validMoves, selectedSq, lastMove)
 
         # Update the window state
         pygame.display.update()

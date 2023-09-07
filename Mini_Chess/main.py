@@ -13,7 +13,7 @@ pygame.init()
 
 # Game Setup
 WINDOW_WIDTH = 300
-WINDOW_HEIGHT = 450
+WINDOW_HEIGHT = 500
 SQ_SIZE = 60
 DIMENSION_X = 5
 DIMENSION_Y = 6
@@ -27,15 +27,17 @@ HOVER_COLOR = (210, 140, 80)
 
 # Button colors
 PLAY_BUTTON_COLOR = pygame.Color('chartreuse4')
-RESTART_BUTTON_COLOR = pygame.Color('crimson')
+PLAY_BUTTON_HOEVR_COLOR = pygame.Color('chartreuse1')
+RESTART_BUTTON_COLOR = pygame.Color('brown1')
+RESTART_BUTTON_HOVER_COLOR = pygame.Color('brown4')
 BUTTON_TEXT_COLOR = pygame.Color('white')
 
 
 # Button dimensions and positions
-BUTTON_WIDTH = 80
+BUTTON_WIDTH = 100
 BUTTON_HEIGHT = 40
-PLAY_BUTTON_POS = (40, 380)
-RESTART_BUTTON_POS = (180, 380)
+PLAY_BUTTON_POS = (30, 380)
+RESTART_BUTTON_POS = (160, 380)
 
 # Define button fonts
 BUTTON_FONT = pygame.font.SysFont('Arial', 20, bold=True)
@@ -71,7 +73,12 @@ Highlight square selected
 '''
 
 
-def highlightSquare(WINDOW, GAME_STATE, validMoves, sqSelected, lastMove):
+def highlightSquare(WINDOW, GAME_STATE, validMoves, sqSelected, lastMove, restart):
+
+    # Clear all highlighting when restarting the game
+    if restart:
+        sqSelected.clear()
+        lastMove.clear()
 
     if len(sqSelected) != 0:
         row, col = sqSelected[0]
@@ -104,32 +111,20 @@ def highlightSquare(WINDOW, GAME_STATE, validMoves, sqSelected, lastMove):
         if startRow is not None and startCol is not None:
             surface = pygame.Surface((SQ_SIZE, SQ_SIZE))
             surface.set_alpha(100)
-            surface.fill(pygame.Color('green'))
+            surface.fill(pygame.Color('cyan'))
             WINDOW.blit(surface, (startCol*SQ_SIZE, startRow*SQ_SIZE))
 
         if endRow is not None and endCol is not None:
             surface = pygame.Surface((SQ_SIZE, SQ_SIZE))
             surface.set_alpha(100)
-            surface.fill(pygame.Color('green'))
+            surface.fill(pygame.Color('cyan'))
             WINDOW.blit(surface, (endCol*SQ_SIZE, endRow*SQ_SIZE))
 
 
-def markMovedSquare(WINDOW, sqSelected):
-
-    startRow, startCol = sqSelected[0]
-    endRow, endCol = sqSelected[1]
-
-    if startRow is not None and startCol is not None:
-        print("ARE YOU THERE")
-        surface = pygame.Surface((SQ_SIZE, SQ_SIZE))
-        surface.set_alpha(100)
-        surface.fill(pygame.Color('red'))
-        WINDOW.blit(surface, (startCol*SQ_SIZE, startRow*SQ_SIZE))
-
-
-def drawGameState(WINDOW, GAME_STATE, validMoves, sqSelected, lastMove):
+def drawGameState(WINDOW, GAME_STATE, validMoves, sqSelected, lastMove, restart):
     drawBoard(WINDOW)
-    highlightSquare(WINDOW, GAME_STATE, validMoves, sqSelected, lastMove)
+    highlightSquare(WINDOW, GAME_STATE, validMoves,
+                    sqSelected, lastMove, restart)
     drawPieces(WINDOW, GAME_STATE.board)
     drawButtons(WINDOW)
 
@@ -186,10 +181,16 @@ def drawPieces(WINDOW, Board):
 
 
 def drawButtons(WINDOW):
+
+    BUTTON_RADIUS = 15
+    play_button_rect = ''
+    restart_button_rect = ''
+
     # Draw "Play" button
     play_button_rect = pygame.Rect(
         PLAY_BUTTON_POS[0], PLAY_BUTTON_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
-    pygame.draw.rect(WINDOW, PLAY_BUTTON_COLOR, play_button_rect)
+    pygame.draw.rect(WINDOW, PLAY_BUTTON_COLOR,
+                     play_button_rect, border_radius=BUTTON_RADIUS)
 
     play_text = BUTTON_FONT.render("Play", True, BUTTON_TEXT_COLOR)
     play_text_rect = play_text.get_rect(center=play_button_rect.center)
@@ -198,7 +199,8 @@ def drawButtons(WINDOW):
     # Draw "Restart" button
     restart_button_rect = pygame.Rect(
         RESTART_BUTTON_POS[0], RESTART_BUTTON_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
-    pygame.draw.rect(WINDOW, RESTART_BUTTON_COLOR, restart_button_rect)
+    pygame.draw.rect(WINDOW, RESTART_BUTTON_COLOR,
+                     restart_button_rect, border_radius=BUTTON_RADIUS)
 
     restart_text = BUTTON_FONT.render("Restart", True, BUTTON_TEXT_COLOR)
     restart_text_rect = restart_text.get_rect(
@@ -290,6 +292,7 @@ def main():
         # render game elements
         WINDOW.fill(BACKGROUND)
         clock.tick(FPS)
+        restart = False
 
         # check if Human is playing...
         humanPlayer = (GAME_STATE.whiteToMove and playerOne) or (
@@ -355,21 +358,17 @@ def main():
                     pieceClickCount = 0
                     moveMade = False
                     animate = False
+                    restart = True
 
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_z:  # undo when z is pressed
-                    GAME_STATE.undoMove()
+                    move = GAME_STATE.undoMove()
                     moveMade = True
                     animate = False
-
-        # update valid moves
-        if moveMade:
-            if animate:
-                animateMove(GAME_STATE.moveLog[-1],
-                            WINDOW, GAME_STATE.board, clock)
-            validMoves = GAME_STATE.getValidMoves()
-            moveMade = False
-            animate = False
+                    sound_effects = loadSoundEffects()
+                    sound_effects['undo'].play()
+                    lastMove = [(move.startRow, move.startCol),
+                                (move.endRow, move.endCol)]
 
         #! AI Move
         if not humanPlayer:
@@ -390,8 +389,18 @@ def main():
             lastMove = [(aiMove.startRow, aiMove.startCol),
                         (aiMove.endRow, aiMove.endCol)]
 
+        # update valid moves
+        if moveMade:
+            if animate:
+                animateMove(GAME_STATE.moveLog[-1],
+                            WINDOW, GAME_STATE.board, clock)
+            validMoves = GAME_STATE.getValidMoves()
+            moveMade = False
+            animate = False
+
         # Set Game State
-        drawGameState(WINDOW, GAME_STATE, validMoves, selectedSq, lastMove)
+        drawGameState(WINDOW, GAME_STATE, validMoves,
+                      selectedSq, lastMove, restart)
 
         # Update the window state
         pygame.display.update()

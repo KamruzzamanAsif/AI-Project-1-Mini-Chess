@@ -41,7 +41,8 @@ def findBestMove(gamestate, validMoves):
     global nextMove
     nextMove = None
     random.shuffle(validMoves)
-    findMoveNegaMaxPruning(gamestate, validMoves, DEPTH, -CHECKMATE, CHECKMATE, 1 if gamestate.whiteToMove else -1)
+    findMoveNegaMaxPruning(gamestate, validMoves, DEPTH, -
+                           CHECKMATE, CHECKMATE, 1 if gamestate.whiteToMove else -1)
     return nextMove
 
 
@@ -64,7 +65,7 @@ def findMoveNegaMaxPruning(gamestate, validMoves, depth, alpha, beta, turnMultip
         gamestate.undoMove()
         if maxScore > alpha:
             alpha = maxScore
-        if alpha >= beta:
+        if alpha >= beta:       # pruning
             break
 
     return maxScore
