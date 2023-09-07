@@ -8,7 +8,7 @@ class GameState():
             ['--', '--', '--', '--', '--'],
             ['--', '--', '--', '--', '--'],
             ['w_P', 'w_P', 'w_P', 'w_P', 'w_P'],
-            ['w_R', 'w_N', 'w_B', 'w_Q', 'w_K'],
+            ['w_K', 'w_Q', 'w_B', 'w_N', 'w_R'],
         ]
 
         self.moveFunctions = {'P': self.getPawnMoves, 'R': self.getRookMoves,
