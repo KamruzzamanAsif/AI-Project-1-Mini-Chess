@@ -42,8 +42,8 @@ BUTTON_FONT = pygame.font.SysFont('Arial', 20, bold=True)
 def loadImages():
 
     IMAGES = {}
-    pieces = ['b_B', 'b_K', 'b_Kn', 'b_P', 'b_Q', 'b_R',
-              'w_B', 'w_K', 'w_Kn', 'w_P', 'w_Q', 'w_R']
+    pieces = ['b_B', 'b_K', 'b_N', 'b_P', 'b_Q', 'b_R',
+              'w_B', 'w_K', 'w_N', 'w_P', 'w_Q', 'w_R']
 
     for piece in pieces:
         image = pygame.image.load('images/' + piece + '.png')

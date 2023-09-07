@@ -38,6 +38,13 @@ class GameState():
         elif move.pieceMoved == 'w_K':
             self.whiteKingLocation = (move.endRow, move.endCol)
 
+        # pawn promotion
+        if move.isPawnPromotion:
+            # selectedPiece = input("Promote to Q, R, B, or N: ") # this can be done in UI later
+            self.board[move.endRow][move.endCol] = move.pieceMoved[0] + '_Q' # eikhane pore selectePiece dewa jabe
+
+
+
     def undoMove(self, mode='single'):
         if mode == 'all':
             while len(self.moveLog) != 0:
@@ -280,6 +287,7 @@ class Move():
         self.endCol = endSq[1]
         self.pieceMoved = board[self.startRow][self.startCol]
         self.pieceCaptured = board[self.endRow][self.endCol]
+        self.isPawnPromotion = (self.pieceMoved == 'w_P' and self.endRow == 0) or (self.pieceMoved == 'b_P' and self.endRow == 5)
         self.moveID = self.startRow * 1000 + self.startCol * \
             100 + self.endRow * 10 + self.endCol
 
