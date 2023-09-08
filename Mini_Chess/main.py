@@ -20,26 +20,35 @@ FPS = 60
 
 # BG color
 BACKGROUND = pygame.Color('azure')
-BOARD_COLOR_A = pygame.Color('antiquewhite')
-BOARD_COLOR_B = pygame.Color('darkseagreen4')
+BOARD_COLOR_A = (239, 239, 239)
+BOARD_COLOR_B = (149, 141, 148)
 HOVER_COLOR = (210, 140, 80)
 
 # Button colors
-PLAY_BUTTON_COLOR = pygame.Color('chartreuse4')
+PLAY_BUTTON_COLOR = pygame.Color('bisque3')
 PLAY_BUTTON_HOEVR_COLOR = pygame.Color('chartreuse1')
-RESTART_BUTTON_COLOR = pygame.Color('brown1')
+RESTART_BUTTON_COLOR = pygame.Color('dodgerblue')
 RESTART_BUTTON_HOVER_COLOR = pygame.Color('brown4')
 BUTTON_TEXT_COLOR = pygame.Color('white')
+TOGGLE_BUTTON_COLOR = pygame.Color('purple')
 
 
 # Button dimensions and positions
-BUTTON_WIDTH = 100
+BUTTON_WIDTH = 40
 BUTTON_HEIGHT = 40
-PLAY_BUTTON_POS = (30, 380)
-RESTART_BUTTON_POS = (160, 380)
+PLAY_BUTTON_POS = (200, 380)
+RESTART_BUTTON_POS = (250, 380)
+TOGGLE_BUTTON_1_POS = (150, 380)
+TOGGLE_BUTTON_2_POS = (100, 380)
 
-# Define button fonts
+# Define button attributes
 BUTTON_FONT = pygame.font.SysFont('Arial', 20, bold=True)
+BUTTON_RADIUS = 8
+TOOGLE_BUTTON_CLICKED = True
+
+
+# Select Player
+opponent_selection = True
 
 
 ########################## PROCESS FUNCTIONS ##########################
@@ -49,8 +58,10 @@ def loadSoundEffects():
     effects = {}
     move_piece = pygame.mixer.Sound('./audios/move_pieces.wav')
     undo_move = pygame.mixer.Sound('./audios/undo_moves.wav')
+    checkmate = pygame.mixer.Sound('./audios/checkmate_sound.wav')
     effects['move'] = move_piece
     effects['undo'] = undo_move
+    effects['checkmate'] = checkmate
     return effects
 
 
@@ -92,23 +103,22 @@ def highlightSquare(WINDOW, GAME_STATE, validMoves, sqSelected, lastMove, restar
             surface.fill(pygame.Color('blue'))
             WINDOW.blit(surface, (col*SQ_SIZE, row*SQ_SIZE))
 
+            # highlight for possible moves
             surface.fill(pygame.Color('yellow'))
 
             for move in validMoves:
                 if move.startRow == row and move.startCol == col:
                     WINDOW.blit(
                         surface, (SQ_SIZE*move.endCol, SQ_SIZE*move.endRow))
-                    
-        # Highlight squares for checkmate
+
+    # Highlight squares for checkmate
     if GAME_STATE.inCheck():
         king_row, king_col = (
             GAME_STATE.whiteKingLocation if GAME_STATE.whiteToMove else GAME_STATE.blackKingLocation)
-        
+
         surface = pygame.Surface((SQ_SIZE, SQ_SIZE))
         surface.fill(pygame.Color('red'))
         WINDOW.blit(surface, (king_col*SQ_SIZE, king_row*SQ_SIZE))
-        # pygame.draw.rect(WINDOW, pygame.Color('red'), (king_col*SQ_SIZE, king_row*SQ_SIZE, SQ_SIZE, SQ_SIZE), 4)
-
 
     # Highlight the last moved piece
     if len(lastMove) != 0:
@@ -189,19 +199,18 @@ def drawPieces(WINDOW, Board):
 
 def drawButtons(WINDOW):
 
-    BUTTON_RADIUS = 15
     play_button_rect = ''
     restart_button_rect = ''
 
-    # Draw "Play" button
-    play_button_rect = pygame.Rect(
-        PLAY_BUTTON_POS[0], PLAY_BUTTON_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
-    pygame.draw.rect(WINDOW, PLAY_BUTTON_COLOR,
-                     play_button_rect, border_radius=BUTTON_RADIUS)
+    # # ==> Play Button
+    font = pygame.font.SysFont("Arial", 17, True, False)
+    textObject = font.render("Opponent: ", 0, pygame.Color('green'))
+    textLocation = pygame.Rect(10, 392, WINDOW_WIDTH, WINDOW_HEIGHT)
+    WINDOW.blit(textObject, textLocation)
 
-    play_text = BUTTON_FONT.render("Play", True, BUTTON_TEXT_COLOR)
-    play_text_rect = play_text.get_rect(center=play_button_rect.center)
-    WINDOW.blit(play_text, play_text_rect)
+    # ==> Restart Button
+
+    icon_image = pygame.image.load('./icons/re2.png')
 
     # Draw "Restart" button
     restart_button_rect = pygame.Rect(
@@ -209,10 +218,20 @@ def drawButtons(WINDOW):
     pygame.draw.rect(WINDOW, RESTART_BUTTON_COLOR,
                      restart_button_rect, border_radius=BUTTON_RADIUS)
 
-    restart_text = BUTTON_FONT.render("Restart", True, BUTTON_TEXT_COLOR)
-    restart_text_rect = restart_text.get_rect(
-        center=restart_button_rect.center)
-    WINDOW.blit(restart_text, restart_text_rect)
+    # Draw the icon on the button (adjust the position as needed)
+    icon_rect = icon_image.get_rect(center=(
+        restart_button_rect.centerx, restart_button_rect.centery))  # Adjust the icon position
+    WINDOW.blit(icon_image, icon_rect)
+
+    # ==> Toggle Button (Player Selection)
+    tg_btn_color_1 = pygame.Color(
+        'blue') if TOOGLE_BUTTON_CLICKED else pygame.Color('gainsboro')
+    tg_btn_color_2 = pygame.Color(
+        'gainsboro') if TOOGLE_BUTTON_CLICKED else pygame.Color('blue')
+    makeButton(WINDOW, TOGGLE_BUTTON_1_POS, BUTTON_WIDTH+50, BUTTON_HEIGHT,
+               TEXT='HUMAN', BTN_COLOR=tg_btn_color_1, BTN_RADIUS=15)
+    makeButton(WINDOW, TOGGLE_BUTTON_2_POS, BUTTON_WIDTH, BUTTON_HEIGHT,
+               TEXT='AI', BTN_COLOR=tg_btn_color_2, BTN_RADIUS=15)
 
 
 '''
@@ -271,6 +290,20 @@ def drawGameOverText(screen, text, textColor):
         WINDOW_WIDTH/2 - textObject.get_width()/2, WINDOW_HEIGHT/2 - textObject.get_height()/2)
     screen.blit(textObject, textLocation)
 
+
+def makeButton(WINDOW, POSITION, WIDTH, HEIGHT, TEXT, BTN_COLOR, BTN_RADIUS=0):
+
+    # button_color = BTN_COLOR if TOOGLE_BUTTON_CLICKED else BTN_COLOR_2
+    toggle_button_rect = pygame.Rect(POSITION[0], POSITION[1], WIDTH, HEIGHT)
+    pygame.draw.rect(WINDOW, BTN_COLOR, toggle_button_rect,
+                     border_radius=BTN_RADIUS)
+
+    # Draw the selected player on the toggle button
+    font = pygame.font.Font(None, 24)
+    toggle_text = font.render(TEXT, True, pygame.Color('white'))
+    toggle_text_rect = toggle_text.get_rect(center=toggle_button_rect.center)
+    WINDOW.blit(toggle_text, toggle_text_rect)
+
 ########################## MAIN FUNCTION ##########################
 
 
@@ -285,8 +318,9 @@ def main():
     # if human plays its TRUE, if AI plays then its FALSE (white)
     playerOne = True
     # -Do- (black)
-    playerTwo = False
+    playerTwo = True
     lastMove = []
+    opponent_selection = True
 
     # Set Display
     WINDOW = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -305,6 +339,10 @@ def main():
         PLAY_BUTTON_POS[0], PLAY_BUTTON_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
     restart_button_rect = pygame.Rect(
         RESTART_BUTTON_POS[0], RESTART_BUTTON_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
+    human_player_rect = pygame.Rect(
+        TOGGLE_BUTTON_1_POS[0], TOGGLE_BUTTON_1_POS[1], BUTTON_WIDTH+50, BUTTON_HEIGHT)
+    ai_player_rect = pygame.Rect(
+        TOGGLE_BUTTON_2_POS[0], TOGGLE_BUTTON_2_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
 
     # Get valid moves
     validMoves = GAME_STATE.getValidMoves()
@@ -377,9 +415,39 @@ def main():
                                     pieceClickCount = 1
                                     selectedSq.remove(selectedSq[0])
 
-                # Check if "Play" button is clicked
-                if play_button_rect.collidepoint(event.pos):
-                    print("Play button pressed")
+                # opponent selection
+                if ai_player_rect.collidepoint(event.pos):
+                    opponent_selection = False
+                    global TOOGLE_BUTTON_CLICKED
+                    TOOGLE_BUTTON_CLICKED = opponent_selection
+                    playerTwo = TOOGLE_BUTTON_CLICKED
+                    print("ai:", playerTwo)
+
+                    # restart
+                    GAME_STATE = engine.GameState()
+                    validMoves = GAME_STATE.getValidMoves()
+                    selectedSq = []
+                    pieceClickCount = 0
+                    moveMade = False
+                    animate = False
+                    restart = True
+                    gameOver = False
+
+                if human_player_rect.collidepoint(event.pos):
+                    opponent_selection = True
+                    TOOGLE_BUTTON_CLICKED = opponent_selection
+                    playerTwo = TOOGLE_BUTTON_CLICKED
+                    print("Player: ", playerTwo)
+
+                    # restart
+                    GAME_STATE = engine.GameState()
+                    validMoves = GAME_STATE.getValidMoves()
+                    selectedSq = []
+                    pieceClickCount = 0
+                    moveMade = False
+                    animate = False
+                    restart = True
+                    gameOver = False
 
                 # Check if "Restart" button is clicked
                 if restart_button_rect.collidepoint(event.pos):
@@ -451,6 +519,10 @@ def main():
                 drawGameOverText(WINDOW, 'Black wins by Checkmate', 'Red')
             else:
                 drawGameOverText(WINDOW, 'White wins by Checkmate', 'Green')
+
+            # sound_effect = loadSoundEffects()
+            # sound_effect['checkmate'].play()
+
         elif GAME_STATE.staleMate:
             gameOver = True
             drawGameOverText(WINDOW, 'Stalemate', 'Red')
