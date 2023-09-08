@@ -41,24 +41,37 @@ class GameState():
         # pawn promotion
         if move.isPawnPromotion:
             # selectedPiece = input("Promote to Q, R, B, or N: ") # this can be done in UI later
-            self.board[move.endRow][move.endCol] = move.pieceMoved[0] + '_Q' # eikhane pore selectePiece dewa jabe
+            # eikhane pore selectePiece dewa jabe
+            self.board[move.endRow][move.endCol] = move.pieceMoved[0] + '_Q'
 
-
-
-    def undoMove(self, mode='single'):
+    def undoMove(self, mode=0):
         if mode == 'all':
             while len(self.moveLog) != 0:
                 move = self.moveLog.pop()
                 self.board[move.startRow][move.startCol] = move.pieceMoved
                 self.board[move.endRow][move.endCol] = move.pieceCaptured
                 self.whiteToMove = not self.whiteToMove
+
             # reset the king's location to initial after undo all
             # this means a new game
             # king location
             self.whiteKingLocation = (5, 4)
             self.blackKingLocation = (0, 4)
 
+        elif mode > 0:
+            for i in range(int(mode)):
+                move = self.moveLog.pop()
+                self.board[move.startRow][move.startCol] = move.pieceMoved
+                self.board[move.endRow][move.endCol] = move.pieceCaptured
+                self.whiteToMove = not self.whiteToMove
+                # update the king's loaction if moved
+                if move.pieceMoved == 'b_K':
+                    self.blackKingLocation = (move.startRow, move.startCol)
+                elif move.pieceMoved == 'w_K':
+                    self.whiteKingLocation = (move.startRow, move.startCol)
+
         elif len(self.moveLog) != 0:
+            
             move = self.moveLog.pop()
             self.board[move.startRow][move.startCol] = move.pieceMoved
             self.board[move.endRow][move.endCol] = move.pieceCaptured
@@ -289,7 +302,8 @@ class Move():
         self.endCol = endSq[1]
         self.pieceMoved = board[self.startRow][self.startCol]
         self.pieceCaptured = board[self.endRow][self.endCol]
-        self.isPawnPromotion = (self.pieceMoved == 'w_P' and self.endRow == 0) or (self.pieceMoved == 'b_P' and self.endRow == 5)
+        self.isPawnPromotion = (self.pieceMoved == 'w_P' and self.endRow == 0) or (
+            self.pieceMoved == 'b_P' and self.endRow == 5)
         self.moveID = self.startRow * 1000 + self.startCol * \
             100 + self.endRow * 10 + self.endCol
 

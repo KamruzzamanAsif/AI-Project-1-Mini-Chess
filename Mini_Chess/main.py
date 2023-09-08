@@ -362,13 +362,18 @@ def main():
 
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_z:  # undo when z is pressed
-                    move = GAME_STATE.undoMove()
-                    moveMade = True
-                    animate = False
-                    sound_effects = loadSoundEffects()
-                    sound_effects['undo'].play()
-                    lastMove = [(move.startRow, move.startCol),
-                                (move.endRow, move.endCol)]
+                    # Check if there are at least two moves to undo
+                    if len(GAME_STATE.moveLog) >= 2:
+                        # Undo the last two moves (one AI move and one human move)
+                        move = GAME_STATE.undoMove(2)
+                        moveMade = True
+                        animate = False
+                        sound_effects = loadSoundEffects()
+                        sound_effects['undo'].play()
+                        lastMove = [(move.startRow, move.startCol),
+                                    (move.endRow, move.endCol)]
+                    else:
+                        print("Not enough moves to undo.")
 
         #! AI Move
         if not humanPlayer:
