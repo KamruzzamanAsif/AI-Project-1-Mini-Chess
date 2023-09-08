@@ -5,7 +5,7 @@ from pygame.locals import *
 
 import ai
 import engine
-import smartMove
+import ai
 
 pygame.init()
 
@@ -300,10 +300,13 @@ def main():
 
         # Event handling
         for event in pygame.event.get():
+            
+            # QUIT Game
             if event.type == QUIT:
                 pygame.quit()
                 sys.exit()
 
+            # handle piece movement
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
 
                 # Click squares to move the piece
@@ -360,6 +363,7 @@ def main():
                     animate = False
                     restart = True
 
+            # handle undo moves
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_z:  # undo when z is pressed
                     # Check if there are at least two moves to undo
@@ -380,7 +384,7 @@ def main():
             # aiMove = ai.findRandomMove(validMoves)          # random ai move
             # aiMove = ai.findBestMove(GAME_STATE, validMoves)  # naive approach
 
-            aiMove = smartMove.findBestMove(
+            aiMove = ai.findBestMove(
                 GAME_STATE, validMoves)  # optimum approach
             GAME_STATE.makeMove(aiMove)
             moveMade = True

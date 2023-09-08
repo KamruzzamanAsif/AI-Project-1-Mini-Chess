@@ -5,7 +5,7 @@ from pygame.locals import *
 
 import ai
 import engine
-import smartMove
+import ai
 
 pygame.init()
 
@@ -358,7 +358,7 @@ def main():
             # aiMove = ai.findRandomMove(validMoves)          # random ai move
             # aiMove = ai.findBestMove(GAME_STATE, validMoves)  # naive approach
 
-            aiMove = smartMove.findBestMove(
+            aiMove = ai.findBestMove(
                 GAME_STATE, validMoves)  # optimum approach
             GAME_STATE.makeMove(aiMove)
             moveMade = True
