@@ -5,7 +5,6 @@ from pygame.locals import *
 
 import ai
 import engine
-import ai
 
 pygame.init()
 
@@ -93,15 +92,23 @@ def highlightSquare(WINDOW, GAME_STATE, validMoves, sqSelected, lastMove, restar
             surface.fill(pygame.Color('blue'))
             WINDOW.blit(surface, (col*SQ_SIZE, row*SQ_SIZE))
 
-            # highlight moves
-            # TODO: if it's checkmate then the king should be colored as red
-
             surface.fill(pygame.Color('yellow'))
 
             for move in validMoves:
                 if move.startRow == row and move.startCol == col:
                     WINDOW.blit(
                         surface, (SQ_SIZE*move.endCol, SQ_SIZE*move.endRow))
+                    
+        # Highlight squares for checkmate
+    if GAME_STATE.inCheck():
+        king_row, king_col = (
+            GAME_STATE.whiteKingLocation if GAME_STATE.whiteToMove else GAME_STATE.blackKingLocation)
+        
+        surface = pygame.Surface((SQ_SIZE, SQ_SIZE))
+        surface.fill(pygame.Color('red'))
+        WINDOW.blit(surface, (king_col*SQ_SIZE, king_row*SQ_SIZE))
+        # pygame.draw.rect(WINDOW, pygame.Color('red'), (king_col*SQ_SIZE, king_row*SQ_SIZE, SQ_SIZE, SQ_SIZE), 4)
+
 
     # Highlight the last moved piece
     if len(lastMove) != 0:
@@ -244,6 +251,25 @@ def animateMove(move, WINDOW, board, clock):
         pygame.display.update()
         clock.tick(60)
 
+# Check message
+
+
+def drawCheckText(screen, text):
+    font = pygame.font.SysFont("Helvetica", 32, True, False)
+    textObject = font.render(text, 0, pygame.Color('Red'))
+    textLocation = pygame.Rect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT).move(
+        WINDOW_WIDTH/2 - textObject.get_width()/2, WINDOW_HEIGHT/2 - textObject.get_height()*6)
+    screen.blit(textObject, textLocation)
+
+# Game over message
+
+
+def drawGameOverText(screen, text, textColor):
+    font = pygame.font.SysFont("Helvetica", 18, True, False)
+    textObject = font.render(text, 0, pygame.Color(textColor))
+    textLocation = pygame.Rect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT).move(
+        WINDOW_WIDTH/2 - textObject.get_width()/2, WINDOW_HEIGHT/2 - textObject.get_height()/2)
+    screen.blit(textObject, textLocation)
 
 ########################## MAIN FUNCTION ##########################
 
@@ -302,7 +328,7 @@ def main():
 
         # Event handling
         for event in pygame.event.get():
-            
+
             # QUIT Game
             if event.type == QUIT:
                 pygame.quit()
@@ -413,10 +439,10 @@ def main():
         # Set Game State
         drawGameState(WINDOW, GAME_STATE, validMoves,
                       selectedSq, lastMove, restart)
-        
+
         # check message handling section
         if GAME_STATE.inCheck():
-            drawCheckText(WINDOW, 'Check')    
+            drawCheckText(WINDOW, 'Check')
 
         # game over handling section
         if GAME_STATE.checkMate:
@@ -433,21 +459,5 @@ def main():
         pygame.display.update()
 
 
-# Check message
-def drawCheckText(screen, text):
-    font = pygame.font.SysFont("Helvetica", 32, True, False)
-    textObject = font.render(text, 0, pygame.Color('Red'))
-    textLocation = pygame.Rect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT).move(WINDOW_WIDTH/2 - textObject.get_width()/2, WINDOW_HEIGHT/2 - textObject.get_height()*6)
-    screen.blit(textObject, textLocation)
-
-# Game over message 
-def drawGameOverText(screen, text, textColor):
-    font = pygame.font.SysFont("Helvetica", 18, True, False)
-    textObject = font.render(text, 0, pygame.Color(textColor))
-    textLocation = pygame.Rect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT).move(WINDOW_WIDTH/2 - textObject.get_width()/2, WINDOW_HEIGHT/2 - textObject.get_height()/2)
-    screen.blit(textObject, textLocation)
-
-
 if __name__ == '__main__':
     main()
-    
