@@ -249,7 +249,6 @@ def animateMove(move, WINDOW, board, clock):
 
 
 def main():
-
     # initialize pygame
     pygame.init()
 
@@ -285,6 +284,9 @@ def main():
     validMoves = GAME_STATE.getValidMoves()
     moveMade = False  # flag variable when a move is made
 
+    # game over flag variable
+    gameOver = False
+
     # The main game loop
     running = True
     while running:
@@ -305,46 +307,46 @@ def main():
                 sys.exit()
 
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if not gameOver:
+                    # Click squares to move the piece
+                    if board_rect.collidepoint(event.pos):
+                        if humanPlayer:
+                            y_coord = event.pos[0] // SQ_SIZE
+                            x_coord = event.pos[1] // SQ_SIZE
 
-                # Click squares to move the piece
-                if board_rect.collidepoint(event.pos):
-                    if humanPlayer:
-                        y_coord = event.pos[0] // SQ_SIZE
-                        x_coord = event.pos[1] // SQ_SIZE
+                            # if same square is clicked twice then reset
+                            if selectedSq == (x_coord, y_coord):
+                                selectedSq = ()
+                                pieceClickCount = 0
+                            else:
+                                selectedSq.append((x_coord, y_coord))
+                                pieceClickCount += 1
 
-                        # if same square is clicked twice then reset
-                        if selectedSq == (x_coord, y_coord):
-                            selectedSq = ()
-                            pieceClickCount = 0
-                        else:
-                            selectedSq.append((x_coord, y_coord))
-                            pieceClickCount += 1
+                            # when the piece are to be moved
+                            if pieceClickCount == 2:
 
-                        # when the piece are to be moved
-                        if pieceClickCount == 2:
+                                move = engine.Move(
+                                    selectedSq[0], selectedSq[1], GAME_STATE.board)
+                                print(move.getChessNotation())
 
-                            move = engine.Move(
-                                selectedSq[0], selectedSq[1], GAME_STATE.board)
-                            print(move.getChessNotation())
+                                # if move is valid then make move
+                                for i in range(len(validMoves)):
+                                    if move == validMoves[i]:
+                                        GAME_STATE.makeMove(move)
+                                        moveMade = True
+                                        animate = True
+                                        lastMove = selectedSq
 
-                            # if move is valid then make move
-                            for i in range(len(validMoves)):
-                                if move == validMoves[i]:
-                                    GAME_STATE.makeMove(move)
-                                    moveMade = True
-                                    animate = True
-                                    lastMove = selectedSq
+                                        # playing move piece sound
+                                        sound_effects = loadSoundEffects()
+                                        sound_effects['move'].play()
 
-                                    # playing move piece sound
-                                    sound_effects = loadSoundEffects()
-                                    sound_effects['move'].play()
+                                        pieceClickCount = 0
+                                        selectedSq = []
 
-                                    pieceClickCount = 0
-                                    selectedSq = []
-
-                            if not moveMade:
-                                pieceClickCount = 1
-                                selectedSq.remove(selectedSq[0])
+                                if not moveMade:
+                                    pieceClickCount = 1
+                                    selectedSq.remove(selectedSq[0])
 
                 # Check if "Play" button is clicked
                 if play_button_rect.collidepoint(event.pos):
@@ -359,6 +361,7 @@ def main():
                     moveMade = False
                     animate = False
                     restart = True
+                    gameOver = False
 
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_z:  # undo when z is pressed
@@ -406,10 +409,41 @@ def main():
         # Set Game State
         drawGameState(WINDOW, GAME_STATE, validMoves,
                       selectedSq, lastMove, restart)
+        
+        # check message handling section
+        if GAME_STATE.inCheck():
+            drawCheckText(WINDOW, 'Check')    
+
+        # game over handling section
+        if GAME_STATE.checkMate:
+            gameOver = True
+            if GAME_STATE.whiteToMove:
+                drawGameOverText(WINDOW, 'Black wins by Checkmate', 'Red')
+            else:
+                drawGameOverText(WINDOW, 'White wins by Checkmate', 'Green')
+        elif GAME_STATE.staleMate:
+            gameOver = True
+            drawGameOverText(WINDOW, 'Stalemate', 'Red')
 
         # Update the window state
         pygame.display.update()
 
 
+# Check message
+def drawCheckText(screen, text):
+    font = pygame.font.SysFont("Helvetica", 32, True, False)
+    textObject = font.render(text, 0, pygame.Color('Red'))
+    textLocation = pygame.Rect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT).move(WINDOW_WIDTH/2 - textObject.get_width()/2, WINDOW_HEIGHT/2 - textObject.get_height()*6)
+    screen.blit(textObject, textLocation)
+
+# Game over message 
+def drawGameOverText(screen, text, textColor):
+    font = pygame.font.SysFont("Helvetica", 18, True, False)
+    textObject = font.render(text, 0, pygame.Color(textColor))
+    textLocation = pygame.Rect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT).move(WINDOW_WIDTH/2 - textObject.get_width()/2, WINDOW_HEIGHT/2 - textObject.get_height()/2)
+    screen.blit(textObject, textLocation)
+
+
 if __name__ == '__main__':
     main()
+    
