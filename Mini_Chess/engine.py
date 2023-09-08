@@ -107,8 +107,15 @@ class GameState():
             self.whiteToMove = not self.whiteToMove
             self.undoMove()
 
-        # part-7
-        # TODO: "checkmate and stalemate check kora baki"
+        # checking for - CheckMate / StaleMate 
+        if len(moves) == 0:
+            if self.inCheck():
+                self.checkMate = True
+            else:
+                self.staleMate = True
+        else:
+            self.checkMate = False
+            self.staleMate = False
 
         return moves
 
