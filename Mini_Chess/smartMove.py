@@ -1,6 +1,6 @@
 import random
 
-pieceValue = {"K": 0, "Q": 10, "R": 3, "B": 3, "N": 5, "P": 3}
+pieceValue = {"K": 100, "Q": 10, "R": 4, "B": 4, "N": 7, "P": 1}
 CHECKMATE = float('inf')
 STALEMATE = 0
 DEPTH = 4
