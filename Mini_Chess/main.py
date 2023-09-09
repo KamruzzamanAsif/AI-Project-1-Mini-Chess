@@ -370,7 +370,7 @@ def main():
     # -Do- (black)
     playerTwo = True
     lastMove = []
-    humanPlayer = True 
+    humanPlayer = True
     global MOVE_COUNT, MAX_MOVES, BLACK_AI, BLACK_MAN, WHITE_AI, WHITE_MAN, GAME_STARTED
 
     # Set Display
@@ -389,7 +389,8 @@ def main():
         0, 0, DIMENSION_X * SQ_SIZE, DIMENSION_Y * SQ_SIZE)
 
     # Button Rects
-    play_button_rect = pygame.Rect(PLAY_BUTTON_POS[0], PLAY_BUTTON_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
+    play_button_rect = pygame.Rect(
+        PLAY_BUTTON_POS[0], PLAY_BUTTON_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
     restart_button_rect = pygame.Rect(
         RESTART_BUTTON_POS[0], RESTART_BUTTON_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
     black_human_rect = pygame.Rect(
@@ -534,8 +535,11 @@ def main():
                     MOVE_COUNT = 0
 
                 if play_button_rect.collidepoint(event.pos):
-                    GAME_STARTED = True
-                   
+                    if BLACK_AI == BLACK_MAN == WHITE_AI == WHITE_MAN == False:
+                        continue
+                    elif (BLACK_AI or BLACK_MAN) and (WHITE_AI or WHITE_MAN):
+                        GAME_STARTED = True
+
                 if restart_button_rect.collidepoint(event.pos):
                     GAME_STATE = engine.GameState()
                     validMoves = GAME_STATE.getValidMoves()
