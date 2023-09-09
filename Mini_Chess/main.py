@@ -12,7 +12,7 @@ pygame.init()
 
 # Game Setup
 WINDOW_WIDTH = 300
-WINDOW_HEIGHT = 500
+WINDOW_HEIGHT = 550
 SQ_SIZE = 60
 DIMENSION_X = 5
 DIMENSION_Y = 6
@@ -27,7 +27,7 @@ HOVER_COLOR = (210, 140, 80)
 # Button colors
 PLAY_BUTTON_COLOR = pygame.Color('bisque3')
 PLAY_BUTTON_HOEVR_COLOR = pygame.Color('chartreuse1')
-RESTART_BUTTON_COLOR = pygame.Color('dodgerblue')
+RESTART_BUTTON_COLOR = pygame.Color('orangered')
 RESTART_BUTTON_HOVER_COLOR = pygame.Color('brown4')
 BUTTON_TEXT_COLOR = pygame.Color('white')
 TOGGLE_BUTTON_COLOR = pygame.Color('purple')
@@ -39,17 +39,23 @@ PLAY_BUTTON_POS = (200, 380)
 RESTART_BUTTON_POS = (250, 380)
 TOGGLE_BUTTON_1_POS = (150, 380)
 TOGGLE_BUTTON_2_POS = (100, 380)
+TOGGLE_BUTTON_3_POS = (150, 430)
+TOGGLE_BUTTON_4_POS = (100, 430)
 
 # Define button attributes
 BUTTON_FONT = pygame.font.SysFont('Arial', 20, bold=True)
 BUTTON_RADIUS = 8
-TOOGLE_BUTTON_CLICKED = True
 
 # MOVES
 MOVE_COUNT = 0
-
+MAX_MOVES = 100
+BLACK_AI = False
+BLACK_MAN = False
+WHITE_AI = False
+WHITE_MAN = False
 
 ########################## PROCESS FUNCTIONS ##########################
+
 
 def loadSoundEffects():
 
@@ -74,11 +80,6 @@ def loadImages():
         IMAGES[piece] = pygame.transform.scale(image, (SQ_SIZE, SQ_SIZE))
 
     return IMAGES
-
-
-'''
-Highlight square selected
-'''
 
 
 def highlightSquare(WINDOW, GAME_STATE, validMoves, sqSelected, lastMove, restart):
@@ -141,7 +142,7 @@ def drawGameState(WINDOW, GAME_STATE, validMoves, sqSelected, lastMove, restart)
     highlightSquare(WINDOW, GAME_STATE, validMoves,
                     sqSelected, lastMove, restart)
     drawPieces(WINDOW, GAME_STATE.board)
-    drawButtons(WINDOW)
+    drawButtons(WINDOW, GAME_STATE)
 
 
 def drawBoard(WINDOW):
@@ -195,15 +196,19 @@ def drawPieces(WINDOW, Board):
                     row*SQ_SIZE, col*SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 
-def drawButtons(WINDOW):
+def drawButtons(WINDOW, GAME_STATE):
 
     play_button_rect = ''
     restart_button_rect = ''
 
     # # ==> Show Text (Opponent)
-    drawTextMessage(WINDOW, "Opponent", [10, 392], pygame.Color('darkmagenta'))
-    drawTextMessage(WINDOW, "MoveCount", [10, 430], pygame.Color('darkmagenta'))
+    drawTextMessage(WINDOW, "Black", [10, 392], pygame.Color('darkmagenta'))
+    drawTextMessage(WINDOW, "White", [10, 442], pygame.Color('darkmagenta'))
+    drawTextMessage(WINDOW, "MoveCount", [
+                    10, 490], pygame.Color('darkmagenta'))
     drawTextMessage(WINDOW, MOVE_COUNT, [120, 430], pygame.Color('red'))
+    turn = "Black's Thinking..." if not GAME_STATE.whiteToMove else "White's Thinking..."
+    drawTextMessage(WINDOW, turn, [80, 525], pygame.Color('olivedrab4'))
 
     # ==> Restart Button
 
@@ -220,20 +225,25 @@ def drawButtons(WINDOW):
         restart_button_rect.centerx, restart_button_rect.centery))  # Adjust the icon position
     WINDOW.blit(icon_image, icon_rect)
 
-    # ==> Toggle Button (Player Selection)
-    tg_btn_color_1 = pygame.Color(
-        'blue') if TOOGLE_BUTTON_CLICKED else pygame.Color('gainsboro')
-    tg_btn_color_2 = pygame.Color(
-        'gainsboro') if TOOGLE_BUTTON_CLICKED else pygame.Color('blue')
-    makeButton(WINDOW, TOGGLE_BUTTON_1_POS, BUTTON_WIDTH+50, BUTTON_HEIGHT,
-               TEXT='HUMAN', BTN_COLOR=tg_btn_color_1, BTN_RADIUS=15)
-    makeButton(WINDOW, TOGGLE_BUTTON_2_POS, BUTTON_WIDTH, BUTTON_HEIGHT,
-               TEXT='AI', BTN_COLOR=tg_btn_color_2, BTN_RADIUS=15)
+    # ==> Toggle Button (Black Selection)
+    black_ai = pygame.Color('blue') if BLACK_AI else pygame.Color('gainsboro')
+    black_man = pygame.Color(
+        'blue') if BLACK_MAN else pygame.Color('gainsboro')
 
+    makeButton(WINDOW, TOGGLE_BUTTON_2_POS, BUTTON_WIDTH,
+               BUTTON_HEIGHT, TEXT='AI', BTN_COLOR=black_ai, BTN_RADIUS=15)
+    makeButton(WINDOW, TOGGLE_BUTTON_1_POS, BUTTON_WIDTH+50,
+               BUTTON_HEIGHT, TEXT='HUMAN', BTN_COLOR=black_man, BTN_RADIUS=15)
 
-'''
-Animating the piece movement
-'''
+    # ==> Toggle Button (White Selection)
+    white_ai = pygame.Color('blue') if WHITE_AI else pygame.Color('gainsboro')
+    white_man = pygame.Color(
+        'blue') if WHITE_MAN else pygame.Color('gainsboro')
+
+    makeButton(WINDOW, TOGGLE_BUTTON_4_POS, BUTTON_WIDTH,
+               BUTTON_HEIGHT, TEXT='AI', BTN_COLOR=white_ai, BTN_RADIUS=15)
+    makeButton(WINDOW, TOGGLE_BUTTON_3_POS, BUTTON_WIDTH+50,
+               BUTTON_HEIGHT, TEXT='HUMAN', BTN_COLOR=white_man, BTN_RADIUS=15)
 
 
 def animateMove(move, WINDOW, board, clock):
@@ -267,8 +277,6 @@ def animateMove(move, WINDOW, board, clock):
         pygame.display.update()
         clock.tick(60)
 
-# Check message
-
 
 def drawCheckText(screen, text):
     font = pygame.font.SysFont("Helvetica", 32, True, False)
@@ -276,8 +284,6 @@ def drawCheckText(screen, text):
     textLocation = pygame.Rect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT).move(
         WINDOW_WIDTH/2 - textObject.get_width()/2, WINDOW_HEIGHT/2 - textObject.get_height()*6)
     screen.blit(textObject, textLocation)
-
-# Game over message
 
 
 def drawGameOverText(screen, text, textColor):
@@ -328,7 +334,7 @@ def main():
     playerTwo = True
     lastMove = []
     opponent_selection = True
-    global MOVE_COUNT
+    global MOVE_COUNT, MAX_MOVES, BLACK_AI, BLACK_MAN, WHITE_AI, WHITE_MAN
 
     # Set Display
     WINDOW = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -338,7 +344,7 @@ def main():
     # Set GameState
     GAME_STATE = engine.GameState()
     validMoves = GAME_STATE.getValidMoves()
-    moveMade = False  
+    moveMade = False
     gameOver = False
 
     # Define the board area rect
@@ -350,11 +356,15 @@ def main():
         PLAY_BUTTON_POS[0], PLAY_BUTTON_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
     restart_button_rect = pygame.Rect(
         RESTART_BUTTON_POS[0], RESTART_BUTTON_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
-    human_player_rect = pygame.Rect(
+    black_human_rect = pygame.Rect(
         TOGGLE_BUTTON_1_POS[0], TOGGLE_BUTTON_1_POS[1], BUTTON_WIDTH+50, BUTTON_HEIGHT)
-    ai_player_rect = pygame.Rect(
+    black_ai_rect = pygame.Rect(
         TOGGLE_BUTTON_2_POS[0], TOGGLE_BUTTON_2_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
 
+    white_human_rect = pygame.Rect(
+        TOGGLE_BUTTON_3_POS[0], TOGGLE_BUTTON_3_POS[1], BUTTON_WIDTH+50, BUTTON_HEIGHT)
+    white_ai_rect = pygame.Rect(
+        TOGGLE_BUTTON_4_POS[0], TOGGLE_BUTTON_4_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
 
     # The main game loop
     running = True
@@ -366,7 +376,8 @@ def main():
         restart = False
 
         # check if Human is playing...
-        humanPlayer = (GAME_STATE.whiteToMove and playerOne) or (not GAME_STATE.whiteToMove and playerTwo)
+        humanPlayer = (GAME_STATE.whiteToMove and playerOne) or (
+            not GAME_STATE.whiteToMove and playerTwo)
 
         # Event handling
         for event in pygame.event.get():
@@ -421,12 +432,10 @@ def main():
                                     selectedSq.remove(selectedSq[0])
 
                 # opponent selection
-                if ai_player_rect.collidepoint(event.pos):
-                    opponent_selection = False
-                    global TOOGLE_BUTTON_CLICKED
-                    TOOGLE_BUTTON_CLICKED = opponent_selection
-                    playerTwo = TOOGLE_BUTTON_CLICKED
-                    print("ai:", playerTwo)
+                if black_ai_rect.collidepoint(event.pos):
+                    BLACK_AI = True
+                    BLACK_MAN = False
+                    playerTwo = False
 
                     # restart
                     GAME_STATE = engine.GameState()
@@ -439,11 +448,42 @@ def main():
                     gameOver = False
                     MOVE_COUNT = 0
 
-                if human_player_rect.collidepoint(event.pos):
-                    opponent_selection = True
-                    TOOGLE_BUTTON_CLICKED = opponent_selection
-                    playerTwo = TOOGLE_BUTTON_CLICKED
-                    print("Player: ", playerTwo)
+                if black_human_rect.collidepoint(event.pos):
+                    BLACK_MAN = True
+                    BLACK_AI = False
+                    playerTwo = True
+
+                    # restart
+                    GAME_STATE = engine.GameState()
+                    validMoves = GAME_STATE.getValidMoves()
+                    selectedSq = []
+                    pieceClickCount = 0
+                    moveMade = False
+                    animate = False
+                    restart = True
+                    gameOver = False
+                    MOVE_COUNT = 0
+
+                if white_ai_rect.collidepoint(event.pos):
+                    WHITE_AI = True
+                    WHITE_MAN = False
+                    playerOne = False
+
+                    # restart
+                    GAME_STATE = engine.GameState()
+                    validMoves = GAME_STATE.getValidMoves()
+                    selectedSq = []
+                    pieceClickCount = 0
+                    moveMade = False
+                    animate = False
+                    restart = True
+                    gameOver = False
+                    MOVE_COUNT = 0
+
+                if white_human_rect.collidepoint(event.pos):
+                    WHITE_MAN = True
+                    WHITE_AI = False
+                    playerOne = True
 
                     # restart
                     GAME_STATE = engine.GameState()
@@ -467,7 +507,6 @@ def main():
                     restart = True
                     gameOver = False
                     MOVE_COUNT = 0
-                    
 
             # handle undo moves
             elif event.type == pygame.KEYDOWN:
@@ -487,27 +526,26 @@ def main():
 
         #! AI Move
         if not humanPlayer:
-            # aiMove = ai.findRandomMove(validMoves)          # random ai move
-            # aiMove = ai.findBestMove(GAME_STATE, validMoves)  # naive approach
+            if not gameOver:
+                aiMove = ai.findBestMove(
+                    GAME_STATE, validMoves)  # optimum approach
 
-            aiMove = ai.findBestMove(
-                GAME_STATE, validMoves)  # optimum approach
-            if aiMove == None:
-                print("MOVE NONE", len(validMoves))
-                print(validMoves[0].startRow, validMoves[0].startCol, '--', validMoves[0].endRow, validMoves[0].endCol)
-                continue
-            GAME_STATE.makeMove(aiMove)
-            moveMade = True
-            animate = True
-            MOVE_COUNT += 1
+                if aiMove is None:
+                    aiMove = validMoves[0]
+                    print("GAME OVER")
 
-            # playing piece moving sound
-            sound_effects = loadSoundEffects()
-            sound_effects['move'].play()
+                GAME_STATE.makeMove(aiMove)
+                moveMade = True
+                animate = True
+                MOVE_COUNT += 1
 
-            # track last move
-            lastMove = [(aiMove.startRow, aiMove.startCol),
-                        (aiMove.endRow, aiMove.endCol)]
+                # playing piece moving sound
+                sound_effects = loadSoundEffects()
+                sound_effects['move'].play()
+
+                # track last move
+                lastMove = [(aiMove.startRow, aiMove.startCol),
+                            (aiMove.endRow, aiMove.endCol)]
 
         # update valid moves
         if moveMade:
