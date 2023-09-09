@@ -44,6 +44,7 @@ class GameState():
             # eikhane pore selectePiece dewa jabe
             self.board[move.endRow][move.endCol] = move.pieceMoved[0] + '_Q'
 
+        
     def undoMove(self, mode=0):
         if mode == 'all':
             while len(self.moveLog) != 0:

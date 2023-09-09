@@ -32,7 +32,6 @@ RESTART_BUTTON_HOVER_COLOR = pygame.Color('brown4')
 BUTTON_TEXT_COLOR = pygame.Color('white')
 TOGGLE_BUTTON_COLOR = pygame.Color('purple')
 
-
 # Button dimensions and positions
 BUTTON_WIDTH = 40
 BUTTON_HEIGHT = 40
@@ -46,9 +45,8 @@ BUTTON_FONT = pygame.font.SysFont('Arial', 20, bold=True)
 BUTTON_RADIUS = 8
 TOOGLE_BUTTON_CLICKED = True
 
-
-# Select Player
-opponent_selection = True
+# MOVES
+MOVE_COUNT = 0
 
 
 ########################## PROCESS FUNCTIONS ##########################
@@ -202,11 +200,10 @@ def drawButtons(WINDOW):
     play_button_rect = ''
     restart_button_rect = ''
 
-    # # ==> Play Button
-    font = pygame.font.SysFont("Arial", 17, True, False)
-    textObject = font.render("Opponent: ", 0, pygame.Color('green'))
-    textLocation = pygame.Rect(10, 392, WINDOW_WIDTH, WINDOW_HEIGHT)
-    WINDOW.blit(textObject, textLocation)
+    # # ==> Show Text (Opponent)
+    drawTextMessage(WINDOW, "Opponent", [10, 392], pygame.Color('darkmagenta'))
+    drawTextMessage(WINDOW, "MoveCount", [10, 430], pygame.Color('darkmagenta'))
+    drawTextMessage(WINDOW, MOVE_COUNT, [120, 430], pygame.Color('red'))
 
     # ==> Restart Button
 
@@ -304,6 +301,16 @@ def makeButton(WINDOW, POSITION, WIDTH, HEIGHT, TEXT, BTN_COLOR, BTN_RADIUS=0):
     toggle_text_rect = toggle_text.get_rect(center=toggle_button_rect.center)
     WINDOW.blit(toggle_text, toggle_text_rect)
 
+
+def drawTextMessage(WINDOW, TEXT, POSITION, TEXT_COLOR):
+
+    font = pygame.font.SysFont("Arial", 17, True, False)
+    textObject = font.render(str(TEXT), 1, TEXT_COLOR)
+    textLocation = pygame.Rect(
+        POSITION[0], POSITION[1], WINDOW_WIDTH, WINDOW_HEIGHT)
+    WINDOW.blit(textObject, textLocation)
+
+
 ########################## MAIN FUNCTION ##########################
 
 
@@ -315,12 +322,13 @@ def main():
     pieceClickCount = 0
     selectedSq = []
     animate = False
-    # if human plays its TRUE, if AI plays then its FALSE (white)
+    # human -> TRUE, AI -> FALSE (white)
     playerOne = True
     # -Do- (black)
     playerTwo = True
     lastMove = []
     opponent_selection = True
+    global MOVE_COUNT
 
     # Set Display
     WINDOW = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -329,6 +337,9 @@ def main():
 
     # Set GameState
     GAME_STATE = engine.GameState()
+    validMoves = GAME_STATE.getValidMoves()
+    moveMade = False  
+    gameOver = False
 
     # Define the board area rect
     board_rect = pygame.Rect(
@@ -344,12 +355,6 @@ def main():
     ai_player_rect = pygame.Rect(
         TOGGLE_BUTTON_2_POS[0], TOGGLE_BUTTON_2_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
 
-    # Get valid moves
-    validMoves = GAME_STATE.getValidMoves()
-    moveMade = False  # flag variable when a move is made
-
-    # game over flag variable
-    gameOver = False
 
     # The main game loop
     running = True
@@ -361,8 +366,7 @@ def main():
         restart = False
 
         # check if Human is playing...
-        humanPlayer = (GAME_STATE.whiteToMove and playerOne) or (
-            not GAME_STATE.whiteToMove and playerTwo)
+        humanPlayer = (GAME_STATE.whiteToMove and playerOne) or (not GAME_STATE.whiteToMove and playerTwo)
 
         # Event handling
         for event in pygame.event.get():
@@ -403,6 +407,7 @@ def main():
                                         moveMade = True
                                         animate = True
                                         lastMove = selectedSq
+                                        MOVE_COUNT += 1
 
                                         # playing move piece sound
                                         sound_effects = loadSoundEffects()
@@ -432,6 +437,7 @@ def main():
                     animate = False
                     restart = True
                     gameOver = False
+                    MOVE_COUNT = 0
 
                 if human_player_rect.collidepoint(event.pos):
                     opponent_selection = True
@@ -448,6 +454,7 @@ def main():
                     animate = False
                     restart = True
                     gameOver = False
+                    MOVE_COUNT = 0
 
                 # Check if "Restart" button is clicked
                 if restart_button_rect.collidepoint(event.pos):
@@ -459,6 +466,8 @@ def main():
                     animate = False
                     restart = True
                     gameOver = False
+                    MOVE_COUNT = 0
+                    
 
             # handle undo moves
             elif event.type == pygame.KEYDOWN:
@@ -483,9 +492,14 @@ def main():
 
             aiMove = ai.findBestMove(
                 GAME_STATE, validMoves)  # optimum approach
+            if aiMove == None:
+                print("MOVE NONE", len(validMoves))
+                print(validMoves[0].startRow, validMoves[0].startCol, '--', validMoves[0].endRow, validMoves[0].endCol)
+                continue
             GAME_STATE.makeMove(aiMove)
             moveMade = True
             animate = True
+            MOVE_COUNT += 1
 
             # playing piece moving sound
             sound_effects = loadSoundEffects()
@@ -523,7 +537,7 @@ def main():
             # sound_effect = loadSoundEffects()
             # sound_effect['checkmate'].play()
 
-        elif GAME_STATE.staleMate:
+        if GAME_STATE.staleMate:
             gameOver = True
             drawGameOverText(WINDOW, 'Stalemate', 'Red')
 
