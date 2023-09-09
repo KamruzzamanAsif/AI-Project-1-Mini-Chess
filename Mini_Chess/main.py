@@ -428,44 +428,45 @@ def main():
                 if not gameOver:
                     # Click squares to move the piece
                     if board_rect.collidepoint(event.pos):
-                        if humanPlayer:
-                            y_coord = event.pos[0] // SQ_SIZE
-                            x_coord = event.pos[1] // SQ_SIZE
+                        if GAME_STARTED:
+                            if humanPlayer:
+                                y_coord = event.pos[0] // SQ_SIZE
+                                x_coord = event.pos[1] // SQ_SIZE
 
-                            # if same square is clicked twice then reset
-                            if selectedSq == (x_coord, y_coord):
-                                selectedSq = ()
-                                pieceClickCount = 0
-                            else:
-                                selectedSq.append((x_coord, y_coord))
-                                pieceClickCount += 1
+                                # if same square is clicked twice then reset
+                                if selectedSq == (x_coord, y_coord):
+                                    selectedSq = ()
+                                    pieceClickCount = 0
+                                else:
+                                    selectedSq.append((x_coord, y_coord))
+                                    pieceClickCount += 1
 
-                            # when the piece are to be moved
-                            if pieceClickCount == 2:
+                                # when the piece are to be moved
+                                if pieceClickCount == 2:
 
-                                move = engine.Move(
-                                    selectedSq[0], selectedSq[1], GAME_STATE.board)
-                                print(move.getChessNotation())
+                                    move = engine.Move(
+                                        selectedSq[0], selectedSq[1], GAME_STATE.board)
+                                    print(move.getChessNotation())
 
-                                # if move is valid then make move
-                                for i in range(len(validMoves)):
-                                    if move == validMoves[i]:
-                                        GAME_STATE.makeMove(move)
-                                        moveMade = True
-                                        animate = True
-                                        lastMove = selectedSq
-                                        MOVE_COUNT += 1
+                                    # if move is valid then make move
+                                    for i in range(len(validMoves)):
+                                        if move == validMoves[i]:
+                                            GAME_STATE.makeMove(move)
+                                            moveMade = True
+                                            animate = True
+                                            lastMove = selectedSq
+                                            MOVE_COUNT += 1
 
-                                        # playing move piece sound
-                                        sound_effects = loadSoundEffects()
-                                        sound_effects['move'].play()
+                                            # playing move piece sound
+                                            sound_effects = loadSoundEffects()
+                                            sound_effects['move'].play()
 
-                                        pieceClickCount = 0
-                                        selectedSq = []
+                                            pieceClickCount = 0
+                                            selectedSq = []
 
-                                if not moveMade:
-                                    pieceClickCount = 1
-                                    selectedSq.remove(selectedSq[0])
+                                    if not moveMade:
+                                        pieceClickCount = 1
+                                        selectedSq.remove(selectedSq[0])
 
                 # opponent selection
                 if black_ai_rect.collidepoint(event.pos):
@@ -565,27 +566,28 @@ def main():
                         print("Not enough moves to undo.")
 
         #! AI Move
-        if not humanPlayer:
-            if not gameOver:
-                aiMove = ai.findBestMove(
-                    GAME_STATE, validMoves)  # optimum approach
+        if GAME_STARTED:
+            if not humanPlayer:
+                if not gameOver:
+                    aiMove = ai.findBestMove(
+                        GAME_STATE, validMoves)  # optimum approach
 
-                if aiMove is None:
-                    aiMove = validMoves[0]
-                    print("GAME OVER")
+                    if aiMove is None:
+                        aiMove = validMoves[0]
+                        print("GAME OVER")
 
-                GAME_STATE.makeMove(aiMove)
-                moveMade = True
-                animate = True
-                MOVE_COUNT += 1
+                    GAME_STATE.makeMove(aiMove)
+                    moveMade = True
+                    animate = True
+                    MOVE_COUNT += 1
 
-                # playing piece moving sound
-                sound_effects = loadSoundEffects()
-                sound_effects['move'].play()
+                    # playing piece moving sound
+                    sound_effects = loadSoundEffects()
+                    sound_effects['move'].play()
 
-                # track last move
-                lastMove = [(aiMove.startRow, aiMove.startCol),
-                            (aiMove.endRow, aiMove.endCol)]
+                    # track last move
+                    lastMove = [(aiMove.startRow, aiMove.startCol),
+                                (aiMove.endRow, aiMove.endCol)]
 
         # update valid moves
         if moveMade:
