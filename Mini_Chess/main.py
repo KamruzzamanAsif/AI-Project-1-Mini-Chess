@@ -25,7 +25,7 @@ BOARD_COLOR_B = (149, 141, 148)
 HOVER_COLOR = (210, 140, 80)
 
 # Button colors
-PLAY_BUTTON_COLOR = pygame.Color('bisque3')
+PLAY_BUTTON_COLOR = pygame.Color('green4')
 PLAY_BUTTON_HOEVR_COLOR = pygame.Color('chartreuse1')
 RESTART_BUTTON_COLOR = pygame.Color('orangered')
 RESTART_BUTTON_HOVER_COLOR = pygame.Color('brown4')
@@ -35,8 +35,8 @@ TOGGLE_BUTTON_COLOR = pygame.Color('purple')
 # Button dimensions and positions
 BUTTON_WIDTH = 40
 BUTTON_HEIGHT = 40
-PLAY_BUTTON_POS = (200, 380)
-RESTART_BUTTON_POS = (250, 380)
+PLAY_BUTTON_POS = (250, 380)
+RESTART_BUTTON_POS = (250, 430)
 TOGGLE_BUTTON_1_POS = (150, 380)
 TOGGLE_BUTTON_2_POS = (100, 380)
 TOGGLE_BUTTON_3_POS = (150, 430)
@@ -53,6 +53,7 @@ BLACK_AI = False
 BLACK_MAN = False
 WHITE_AI = False
 WHITE_MAN = False
+GAME_STARTED = False
 
 ########################## PROCESS FUNCTIONS ##########################
 
@@ -206,9 +207,8 @@ def drawButtons(WINDOW, GAME_STATE):
     drawTextMessage(WINDOW, "White", [10, 442], pygame.Color('darkmagenta'))
     drawTextMessage(WINDOW, "MoveCount", [
                     10, 490], pygame.Color('darkmagenta'))
-    drawTextMessage(WINDOW, MOVE_COUNT, [120, 430], pygame.Color('red'))
-    turn = "Black's Thinking..." if not GAME_STATE.whiteToMove else "White's Thinking..."
-    drawTextMessage(WINDOW, turn, [80, 525], pygame.Color('olivedrab4'))
+    drawTextMessage(WINDOW, MOVE_COUNT, [120, 490], pygame.Color('red'))
+    drawUIStatus(WINDOW, GAME_STATE)
 
     # ==> Restart Button
 
@@ -223,6 +223,21 @@ def drawButtons(WINDOW, GAME_STATE):
     # Draw the icon on the button (adjust the position as needed)
     icon_rect = icon_image.get_rect(center=(
         restart_button_rect.centerx, restart_button_rect.centery))  # Adjust the icon position
+    WINDOW.blit(icon_image, icon_rect)
+
+    # ==> Play Button
+
+    icon_image = pygame.image.load('./icons/play2.png')
+
+    # Draw "Restart" button
+    play_button_rect = pygame.Rect(
+        PLAY_BUTTON_POS[0], PLAY_BUTTON_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
+    pygame.draw.rect(WINDOW, PLAY_BUTTON_COLOR,
+                     play_button_rect, border_radius=BUTTON_RADIUS)
+
+    # Draw the icon on the button (adjust the position as needed)
+    icon_rect = icon_image.get_rect(center=(
+        play_button_rect.centerx, play_button_rect.centery))  # Adjust the icon position
     WINDOW.blit(icon_image, icon_rect)
 
     # ==> Toggle Button (Black Selection)
@@ -317,6 +332,28 @@ def drawTextMessage(WINDOW, TEXT, POSITION, TEXT_COLOR):
     WINDOW.blit(textObject, textLocation)
 
 
+def drawUIStatus(WINDOW, GAME_STATE):
+
+    if BLACK_AI == BLACK_MAN == WHITE_AI == WHITE_MAN == False:
+        turn = 'Select AI/Human for each pieces'
+        drawTextMessage(WINDOW, turn, [12, 525], pygame.Color('olivedrab4'))
+
+    elif (BLACK_AI or BLACK_MAN) and (WHITE_AI or WHITE_MAN) and not GAME_STARTED:
+        turn = 'Click Play to Start!'
+        drawTextMessage(WINDOW, turn, [80, 525], pygame.Color('olivedrab4'))
+
+    elif (BLACK_AI or BLACK_MAN) and not GAME_STARTED:
+        turn = "Select AI/Human for White Pieces"
+        drawTextMessage(WINDOW, turn, [12, 525], pygame.Color('olivedrab4'))
+
+    elif (WHITE_AI or WHITE_MAN) and not GAME_STARTED:
+        turn = "Select AI/Human for Black Pieces"
+        drawTextMessage(WINDOW, turn, [12, 525], pygame.Color('olivedrab4'))
+
+    elif GAME_STARTED:
+        turn = "Black's Thinking..." if not GAME_STATE.whiteToMove else "White's Thinking..."
+        drawTextMessage(WINDOW, turn, [80, 525], pygame.Color('olivedrab4'))
+
 ########################## MAIN FUNCTION ##########################
 
 
@@ -333,8 +370,8 @@ def main():
     # -Do- (black)
     playerTwo = True
     lastMove = []
-    opponent_selection = True
-    global MOVE_COUNT, MAX_MOVES, BLACK_AI, BLACK_MAN, WHITE_AI, WHITE_MAN
+    humanPlayer = True 
+    global MOVE_COUNT, MAX_MOVES, BLACK_AI, BLACK_MAN, WHITE_AI, WHITE_MAN, GAME_STARTED
 
     # Set Display
     WINDOW = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -352,8 +389,7 @@ def main():
         0, 0, DIMENSION_X * SQ_SIZE, DIMENSION_Y * SQ_SIZE)
 
     # Button Rects
-    play_button_rect = pygame.Rect(
-        PLAY_BUTTON_POS[0], PLAY_BUTTON_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
+    play_button_rect = pygame.Rect(PLAY_BUTTON_POS[0], PLAY_BUTTON_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
     restart_button_rect = pygame.Rect(
         RESTART_BUTTON_POS[0], RESTART_BUTTON_POS[1], BUTTON_WIDTH, BUTTON_HEIGHT)
     black_human_rect = pygame.Rect(
@@ -375,9 +411,9 @@ def main():
         clock.tick(FPS)
         restart = False
 
-        # check if Human is playing...
-        humanPlayer = (GAME_STATE.whiteToMove and playerOne) or (
-            not GAME_STATE.whiteToMove and playerTwo)
+        if GAME_STARTED:
+            humanPlayer = (GAME_STATE.whiteToMove and playerOne) or (
+                not GAME_STATE.whiteToMove and playerTwo)
 
         # Event handling
         for event in pygame.event.get():
@@ -496,7 +532,9 @@ def main():
                     gameOver = False
                     MOVE_COUNT = 0
 
-                # Check if "Restart" button is clicked
+                if play_button_rect.collidepoint(event.pos):
+                    GAME_STARTED = True
+                   
                 if restart_button_rect.collidepoint(event.pos):
                     GAME_STATE = engine.GameState()
                     validMoves = GAME_STATE.getValidMoves()
@@ -506,6 +544,8 @@ def main():
                     animate = False
                     restart = True
                     gameOver = False
+                    humanPlayer = True
+                    BLACK_AI = BLACK_MAN = WHITE_AI = WHITE_MAN = GAME_STARTED = False
                     MOVE_COUNT = 0
 
             # handle undo moves

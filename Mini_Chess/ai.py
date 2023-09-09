@@ -9,14 +9,12 @@ DEPTH = 4
 def findRandomMove(validMoves):
     return validMoves[random.randint(0, len(validMoves)-1)]
 
-
 def findBestMove(gamestate, validMoves):
     global nextMove
     nextMove = None
     random.shuffle(validMoves)
     MinMaxWithPruning(gamestate, validMoves, DEPTH, -CHECKMATE, CHECKMATE, 1 if gamestate.whiteToMove else -1)
     return nextMove
-
 
 def MinMaxWithPruning(gamestate, validMoves, depth, alpha, beta, turnMultiplier):
     global nextMove
