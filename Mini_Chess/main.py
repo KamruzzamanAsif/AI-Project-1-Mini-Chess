@@ -305,7 +305,7 @@ def drawGameOverText(screen, text, textColor):
     font = pygame.font.SysFont("Helvetica", 18, True, False)
     textObject = font.render(text, 0, pygame.Color(textColor))
     textLocation = pygame.Rect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT).move(
-        WINDOW_WIDTH/2 - textObject.get_width()/2, WINDOW_HEIGHT/2 - textObject.get_height()/2)
+        WINDOW_WIDTH/2 - textObject.get_width()/2, 525)
     screen.blit(textObject, textLocation)
 
 
@@ -338,6 +338,9 @@ def drawUIStatus(WINDOW, GAME_STATE):
         turn = 'Select AI/Human for each pieces'
         drawTextMessage(WINDOW, turn, [12, 525], pygame.Color('olivedrab4'))
 
+    elif GAME_STATE.checkMate or GAME_STATE.staleMate:
+        drawTextMessage(WINDOW, '', [80, 525], pygame.Color('white'))
+
     elif (BLACK_AI or BLACK_MAN) and (WHITE_AI or WHITE_MAN) and not GAME_STARTED:
         turn = 'Click Play to Start!'
         drawTextMessage(WINDOW, turn, [80, 525], pygame.Color('olivedrab4'))
@@ -353,6 +356,7 @@ def drawUIStatus(WINDOW, GAME_STATE):
     elif GAME_STARTED:
         turn = "Black's Thinking..." if not GAME_STATE.whiteToMove else "White's Thinking..."
         drawTextMessage(WINDOW, turn, [80, 525], pygame.Color('olivedrab4'))
+
 
 ########################## MAIN FUNCTION ##########################
 
@@ -607,8 +611,8 @@ def main():
                       selectedSq, lastMove, restart)
 
         # check message handling section
-        if GAME_STATE.inCheck():
-            drawCheckText(WINDOW, 'Check')
+        # if GAME_STATE.inCheck():
+        #     drawCheckText(WINDOW, 'Check')
 
         # game over handling section
         if GAME_STATE.checkMate:
