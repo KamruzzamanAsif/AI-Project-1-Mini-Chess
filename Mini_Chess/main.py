@@ -354,8 +354,8 @@ def drawUIStatus(WINDOW, GAME_STATE):
         drawTextMessage(WINDOW, turn, [12, 525], pygame.Color('olivedrab4'))
 
     elif GAME_STARTED:
-        turn = "Black's Thinking..." if not GAME_STATE.whiteToMove else "White's Thinking..."
-        drawTextMessage(WINDOW, turn, [80, 525], pygame.Color('olivedrab4'))
+        turn = "Black's Turn..." if not GAME_STATE.whiteToMove else "White's Turn..."
+        drawTextMessage(WINDOW, turn, [100, 525], pygame.Color('olivedrab4'))
 
 
 ########################## MAIN FUNCTION ##########################
@@ -451,7 +451,7 @@ def main():
 
                                     move = engine.Move(
                                         selectedSq[0], selectedSq[1], GAME_STATE.board)
-                                    print(move.getChessNotation())
+                                    # print(move.getChessNotation())
 
                                     # if move is valid then make move
                                     for i in range(len(validMoves)):
@@ -489,6 +489,7 @@ def main():
                     restart = True
                     gameOver = False
                     MOVE_COUNT = 0
+                    GAME_STARTED = False
 
                 if black_human_rect.collidepoint(event.pos):
                     BLACK_MAN = True
@@ -505,6 +506,7 @@ def main():
                     restart = True
                     gameOver = False
                     MOVE_COUNT = 0
+                    GAME_STARTED = False
 
                 if white_ai_rect.collidepoint(event.pos):
                     WHITE_AI = True
@@ -521,6 +523,7 @@ def main():
                     restart = True
                     gameOver = False
                     MOVE_COUNT = 0
+                    GAME_STARTED = False
 
                 if white_human_rect.collidepoint(event.pos):
                     WHITE_MAN = True
@@ -537,6 +540,7 @@ def main():
                     restart = True
                     gameOver = False
                     MOVE_COUNT = 0
+                    GAME_STARTED = False
 
                 if play_button_rect.collidepoint(event.pos):
                     if BLACK_AI == BLACK_MAN == WHITE_AI == WHITE_MAN == False:
