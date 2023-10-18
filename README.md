@@ -2,13 +2,13 @@
 
 This is a simple chess game that you can play against an AI opponent. The game features a 5x6 board and a reduced set of pieces, making it easier and faster to play.
 
-## Installation
+# Features
 
-To run this game, you need to have Python 3 and PIP installed on your system. You can install pygame using the following command:
-
-
-`pip install -r requirements.txt`
-
+* 6x5 chessboard
+* Play mode includes: **Human vs Human, Human vs AI or AI vs AI**
+* The computer AI is made following standard algorithms like **Min-Max**
+* Intuitive UI and Sound
+* Total move count 
 
 ## Run
 
