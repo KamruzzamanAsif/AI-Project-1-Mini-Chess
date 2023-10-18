@@ -5,7 +5,7 @@ This is a simple chess game that you can play against an AI opponent. The game f
 # Features
 
 * 6x5 chessboard
-* Play mode includes: **Human vs Human, Human vs AI or AI vs AI**
+* Play mode includes **Human vs Human, Human vs AI or AI vs AI**
 * The computer AI is made following standard algorithms like **Min-Max**
 * Intuitive UI and Sound
 * Total move count 
