@@ -10,10 +10,13 @@ To run this game, you need to have Python 3 and PIP installed on your system. Yo
 `pip install -r requirements.txt`
 
 
-## Usage
+## Run
 
-To start the game, change your current directory to Mini_Chess & then run the main.py file with Python:
+Just copy and paste the following command and you are good to go!!
 
 ```
+git clone https://github.com/ahmedfahad04/AI-Project-1-Mini-Chess.git
+cd AI-Project-1-Mini-Chess/Mini_Chess
+pip install -r requirements.txt
 python main.py
 ```
