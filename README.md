@@ -1,19 +1,30 @@
-# Mini Chess (with AI)
+# Mini Chess (with AI) ♟️
 
-This is a simple chess game that you can play against an AI opponent. The game features a 5x6 board and a reduced set of pieces, making it easier and faster to play.
+Dive into a compact and lightning-fast chess experience with this Mini Chess game! Featuring a 5x6 board and a simplified set of pieces, it's perfect for quick and thrilling matches. 🚀
 
-## Installation
+## Features 🌟
 
-To run this game, you need to have Python 3 and PIP installed on your system. You can install pygame using the following command:
+- 🎮 5x6 chessboard
+- 💥 Play modes include **Human vs Human, Human vs AI, or AI vs AI**
+- 🤖 The AI opponent employs standard algorithms like **Min-Max**
+- 🎨 Intuitive UI and delightful sound effects
+- 🔢 Keep track of the total move count
 
+## How to Run 🏃‍♂️
 
-`pip install -r requirements.txt`
+Get started in a snap with these commands:
 
-
-## Usage
-
-To start the game, change your current directory to Mini_Chess & then run the main.py file with Python:
-
-```
+```bash
+git clone https://github.com/ahmedfahad04/AI-Project-1-Mini-Chess.git
+cd AI-Project-1-Mini-Chess/Mini_Chess
+pip install -r requirements.txt
 python main.py
 ```
+
+## Video Demo 📽️
+
+Watch the Mini-Chess in action! 
+
+[Mini Chess Demo.webm](https://github.com/ahmedfahad04/AI-Project-1-Mini-Chess/assets/60494055/afd41e94-f9c5-4961-b20b-c5387f83f827)
+
+
